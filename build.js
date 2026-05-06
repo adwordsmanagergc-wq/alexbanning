@@ -4,6 +4,7 @@ const path = require('path');
 const PHONE = '0434 131 903';
 const PHONE_HREF = 'tel:+61434131903';
 const EMAIL = 'alex.banning@rh.com.au';
+const GOOGLE_REVIEWS_URL = 'https://share.google/ALCSJNGulIZk4l4eU';
 const OFFICES = [
   { name: 'Lane Cove', addr: '69 Longueville Road, Lane Cove NSW 2066' },
   { name: 'Willoughby', addr: '293 Penshurst Street, Willoughby NSW 2068' },
@@ -86,7 +87,7 @@ const baseHead = (title, description, canonicalPath) => `<!doctype html>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap">
-<link rel="stylesheet" href="/assets/css/styles.css?v=10">
+<link rel="stylesheet" href="/assets/css/styles.css?v=11">
 </head>
 <body>`;
 
@@ -294,22 +295,13 @@ const homeHTML = baseHead(
       <div class="section-head">
         <p class="eyebrow">Testimonials</p>
         <h2 class="display">In their own words.</h2>
+        <p class="lede">Verified reviews from vendors and buyers across the Lower North Shore.</p>
       </div>
-      <div class="quote-grid">
-        <blockquote>
-          <p>“Alex was nothing short of efficient, knowledgeable and professional throughout the process of us buying an apartment in Lane Cove North. He clearly works with integrity and we appreciated his straight talking approach.”</p>
-          <cite>Jenny · Buyer · Lane Cove North</cite>
-        </blockquote>
-        <blockquote>
-          <p>“Clear advice, no inflated promises, and a result above what other agents had quoted. We couldn’t recommend Alex more highly.”</p>
-          <cite>Vendor · Lane Cove</cite>
-        </blockquote>
-        <blockquote>
-          <p>“Discreet, prepared, and thoughtful at every step. Exactly what you want when selling a family home.”</p>
-          <cite>Vendor · Mosman</cite>
-        </blockquote>
-      </div>
-      <p class="text-center"><a class="btn btn-ghost" href="/testimonials/">Read more reviews</a></p>
+      <blockquote class="big-quote">
+        <p>“Alex was nothing short of efficient, knowledgeable and professional throughout the process of us buying an apartment in Lane Cove North. He clearly works with integrity and we appreciated his straight talking approach.”</p>
+        <cite>Jenny · Buyer · Lane Cove North</cite>
+      </blockquote>
+      <p class="text-center"><a class="btn btn-ghost" href="${GOOGLE_REVIEWS_URL}" target="_blank" rel="noopener">Read all reviews on Google</a></p>
     </div>
   </section>
 
@@ -535,28 +527,37 @@ ${breadcrumbs([{name:'Home',url:'/'},{name:'Recent Sales',url:'/recent-sales/'}]
 // ===== TESTIMONIALS =====
 const testimonialsHTML = baseHead(
   'Testimonials | Alex Banning — Lower North Shore',
-  'What vendors and buyers say about working with Alex Banning, the Lower North Shore’s most recommended agent.',
+  'Verified Google reviews from vendors and buyers who have worked with Alex Banning across the Lower North Shore.',
   '/testimonials/'
 ) + nav() + `
 <main>
   <section class="hero hero-sub">
     <div class="container hero-inner">
       <p class="eyebrow">Testimonials</p>
-      <h1>In their own words.</h1>
-      <p class="lede">A representative selection of recent reviews. Full reviews, including ratings, are available on realestate.com.au and RateMyAgent.</p>
+      <h1>What clients say.</h1>
+      <p class="lede">Every review of Alex’s work is verified and lives on his Google Business Profile. Read them all, in full, with star ratings.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-primary" href="${GOOGLE_REVIEWS_URL}" target="_blank" rel="noopener">Read all reviews on Google</a>
+      </div>
     </div>
   </section>
   <section class="section">
-    <div class="container">
-      <div class="quote-grid wide">
-        ${[
-          {q:'Alex was nothing short of efficient, knowledgeable and professional throughout the process of us buying an apartment in Lane Cove North. He clearly works with integrity and we appreciated his straight talking approach.', a:'Jenny · Buyer · Lane Cove North'},
-          {q:'Clear advice, no inflated promises, and a result above what other agents had quoted. We couldn’t recommend Alex more highly.', a:'Vendor · Lane Cove'},
-          {q:'Discreet, prepared, and thoughtful at every step. Exactly what you want when selling a family home.', a:'Vendor · Mosman'},
-          {q:'A measured, calm presence through what could have been a stressful campaign. The result spoke for itself.', a:'Vendor · Northbridge'},
-          {q:'Alex understood our apartment block and our buyer pool from day one. He brought the right buyers and a record price.', a:'Vendor · Cremorne'},
-          {q:'Honest, hard-working and genuinely a pleasure to deal with. Highly recommend.', a:'Buyer · Willoughby'},
-        ].map(t => `<blockquote><p>“${t.q}”</p><cite>${t.a}</cite></blockquote>`).join('')}
+    <div class="container narrow">
+      <p class="eyebrow text-center">A recent review</p>
+      <blockquote class="big-quote">
+        <p>“Alex was nothing short of efficient, knowledgeable and professional throughout the process of us buying an apartment in Lane Cove North. He clearly works with integrity and we appreciated his straight talking approach.”</p>
+        <cite>Jenny · Buyer · Lane Cove North</cite>
+      </blockquote>
+      <p class="text-center muted">For the full set — including verified five-star reviews from vendors across Lane Cove, Mosman, Northbridge, Cremorne, Willoughby and beyond — visit Alex’s Google Business Profile.</p>
+      <p class="text-center"><a class="btn btn-primary" href="${GOOGLE_REVIEWS_URL}" target="_blank" rel="noopener">Read all reviews on Google</a></p>
+    </div>
+  </section>
+  <section class="section section-final">
+    <div class="container text-center">
+      <h2 class="display">Considering selling? Talk to Alex.</h2>
+      <div class="hero-ctas center">
+        <a class="btn btn-primary" href="/appraisal/">Request a free appraisal</a>
+        <a class="btn btn-ghost" href="${PHONE_HREF}">Call ${PHONE}</a>
       </div>
     </div>
   </section>

@@ -347,12 +347,18 @@ p { margin: 0 0 1em; }
 .card-grid + p,
 .quote-grid + .text-center,
 .quote-grid + p,
+.big-quote + .text-center,
+.big-quote + p,
 .suburb-grid + .text-center,
 .suburb-grid + p,
 .badge-grid + .text-center,
 .badge-grid + p,
 .why-grid + .text-center,
-.why-grid + p { margin-top: 56px; }
+.why-grid + p,
+.stat-grid + .text-center,
+.stat-grid + p,
+.faq-list + .text-center,
+.faq-list + p { margin-top: 56px; }
 .sale-card {
   background: var(--paper); border: 1px solid var(--border); border-radius: 4px;
   overflow: hidden; display: block; color: var(--navy);

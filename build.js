@@ -11,6 +11,31 @@ const OFFICES = [
   { name: 'Northbridge', addr: '79 Sailors Bay Road, Northbridge NSW 2063' },
 ];
 
+const RECENT_SALES = [
+  { suburb: 'Cremorne', address: '2/34 Tobruk Avenue, Cremorne', price: '$2,330,000', date: 'Nov 2025', url: 'https://www.raineandhorne.com.au/lns/properties/2-34-tobruk-avenue-cremorne-2090-new-south-wales' },
+  { suburb: 'Lane Cove', address: '404B/84 Gordon Crescent, Lane Cove', price: '$1,120,000', date: 'Jun 2025', url: 'https://www.raineandhorne.com.au/lns/properties/404b-84-gordon-crescent-lane-cove-2066-new-south-wales' },
+  { suburb: 'Lane Cove', address: '60/302 Burns Bay Road, Lane Cove', price: '$995,000', date: 'Aug 2024', url: 'https://www.raineandhorne.com.au/lns/properties/60-302-burns-bay-road-lane-cove-2066-new-south-wales' },
+  { suburb: 'Lane Cove', address: '55/300A Burns Bay Road, Lane Cove', price: '$925,000', date: 'Aug 2025', url: 'https://www.raineandhorne.com.au/lns/properties/55-300a-burns-bay-road-lane-cove-2066-new-south-wales' },
+  { suburb: 'Lane Cove', address: '219/15 Willandra Street, Lane Cove', price: '$890,000', date: 'Feb 2024', url: 'https://www.raineandhorne.com.au/lns/properties/219-15-willandra-street-lane-cove-2066-new-south-wales' },
+  { suburb: 'Lane Cove', address: '406/10 Waterview Drive, Lane Cove', price: '$860,000', date: 'Nov 2024', url: 'https://www.raineandhorne.com.au/lns/properties/406-10-waterview-drive-lane-cove-2066-new-south-wales' },
+  { suburb: 'Lane Cove', address: '8/38 Cope Street, Lane Cove', price: '$820,000', date: 'Dec 2025', url: 'https://www.raineandhorne.com.au/lns/properties/8-38-cope-street-lane-cove-2066-new-south-wales' },
+  { suburb: 'Lane Cove', address: '7/106 Burns Bay Road, Lane Cove', price: '$765,000', date: 'Aug 2025', url: 'https://www.raineandhorne.com.au/lns/properties/7-106-burns-bay-road-lane-cove-2066-new-south-wales' },
+  { suburb: 'Lane Cove', address: '59/31-39 Mindarie Street, Lane Cove', price: '$660,000', date: 'Feb 2025', url: 'https://www.raineandhorne.com.au/lns/properties/59-31-39-mindarie-street-lane-cove-2066-new-south-wales' },
+];
+
+const renderSaleCards = (sales) => sales.map(s => {
+  const slug = s.address.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  return `<a class="sale-card" href="${s.url}" target="_blank" rel="noopener" aria-label="${s.address} — sold ${s.price} ${s.date}">
+    <div class="sale-card-image" style="background-image: url('/assets/img/sales/${slug}.jpg');"></div>
+    <div class="sale-card-body">
+      <p class="eyebrow">${s.suburb}</p>
+      <h3>${s.price}</h3>
+      <p class="muted">${s.address.replace(', ' + s.suburb, '')}</p>
+      <p class="tag">Sold · ${s.date}</p>
+    </div>
+  </a>`;
+}).join('');
+
 const SUBURBS = [
   { slug: 'lane-cove', name: 'Lane Cove', postcode: '2066', tone: 'volume', neighbours: ['lane-cove-north','lane-cove-west','linley-point','longueville','riverview','greenwich'], streets: 'Longueville Road, Centennial Avenue, Mowbray Road and Burns Bay Road', specialty: 'federation homes, premium apartments and family residences', hook: 'Lane Cove’s most recommended agent on realestate.com.au and a consistent street-record holder.' },
   { slug: 'mosman', name: 'Mosman', postcode: '2088', tone: 'prestige', neighbours: ['cremorne','neutral-bay','northbridge','castlecrag','middle-cove'], streets: 'Beauty Point, Balmoral, Middle Head Road and the harbourside pockets above Chinamans Beach', specialty: 'harbour-front homes, federation residences and prestige apartments', hook: 'Discreet, record-setting representation backed by a private buyer database.' },
@@ -61,7 +86,7 @@ const baseHead = (title, description, canonicalPath) => `<!doctype html>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap">
-<link rel="stylesheet" href="/assets/css/styles.css?v=5">
+<link rel="stylesheet" href="/assets/css/styles.css?v=6">
 </head>
 <body>`;
 
@@ -242,22 +267,7 @@ const homeHTML = baseHead(
         <p class="lede">A small selection of recent campaigns. Many of Alex’s strongest results are sold off-market — speak with him directly for the full picture.</p>
       </div>
       <div class="card-grid">
-        ${[
-          {sub:'Mosman', method:'Auction', price:'Sold above reserve', spec:'5 bed · 4 bath · 2 car'},
-          {sub:'Lane Cove', method:'Pre-auction', price:'Street record', spec:'4 bed · 3 bath · 2 car'},
-          {sub:'Northbridge', method:'Off-market', price:'Contact agent', spec:'5 bed · 3 bath · 2 car'},
-          {sub:'Kirribilli', method:'Private treaty', price:'Block record', spec:'3 bed · 2 bath · 1 car'},
-          {sub:'Cremorne', method:'Auction', price:'Sold above reserve', spec:'2 bed · 2 bath · 1 car'},
-          {sub:'Willoughby', method:'Auction', price:'Suburb record', spec:'4 bed · 2 bath · 2 car'},
-        ].map(s => `<article class="sale-card">
-          <div class="sale-card-image"></div>
-          <div class="sale-card-body">
-            <p class="eyebrow">${s.sub}</p>
-            <h3>${s.price}</h3>
-            <p class="muted">${s.spec}</p>
-            <p class="tag">${s.method}</p>
-          </div>
-        </article>`).join('')}
+        ${renderSaleCards(RECENT_SALES.slice(0, 6))}
       </div>
       <p class="text-center"><a class="btn btn-ghost" href="/recent-sales/">View all recent sales</a></p>
     </div>
@@ -507,27 +517,9 @@ const salesHTML = baseHead(
   <section class="section">
     <div class="container">
       <div class="card-grid">
-        ${[
-          {sub:'Mosman', method:'Auction', price:'Sold above reserve', spec:'5 bed · 4 bath · 2 car'},
-          {sub:'Lane Cove', method:'Pre-auction', price:'Street record', spec:'4 bed · 3 bath · 2 car'},
-          {sub:'Northbridge', method:'Off-market', price:'Contact agent', spec:'5 bed · 3 bath · 2 car'},
-          {sub:'Kirribilli', method:'Private treaty', price:'Block record', spec:'3 bed · 2 bath · 1 car'},
-          {sub:'Cremorne', method:'Auction', price:'Sold above reserve', spec:'2 bed · 2 bath · 1 car'},
-          {sub:'Willoughby', method:'Auction', price:'Suburb record', spec:'4 bed · 2 bath · 2 car'},
-          {sub:'Lane Cove North', method:'Auction', price:'Sold under the hammer', spec:'2 bed · 2 bath · 1 car'},
-          {sub:'Riverview', method:'Off-market', price:'Contact agent', spec:'5 bed · 4 bath · 3 car'},
-          {sub:'Castlecrag', method:'Private treaty', price:'Sold prior', spec:'4 bed · 3 bath · 2 car'},
-        ].map(s => `<article class="sale-card">
-          <div class="sale-card-image"></div>
-          <div class="sale-card-body">
-            <p class="eyebrow">${s.sub}</p>
-            <h3>${s.price}</h3>
-            <p class="muted">${s.spec}</p>
-            <p class="tag">${s.method}</p>
-          </div>
-        </article>`).join('')}
+        ${renderSaleCards(RECENT_SALES)}
       </div>
-      <p class="text-center muted small">Live listings will be wired to the Raine &amp; Horne / REA feed. The properties shown are representative.</p>
+      <p class="text-center muted small">Selected recent campaigns. For Alex’s full sales portfolio across the Lower North Shore, see his <a href="https://www.raineandhorne.com.au/lns/team/alex-banning-residential" target="_blank" rel="noopener">Raine &amp; Horne profile</a>.</p>
     </div>
   </section>
   <section class="section section-final">

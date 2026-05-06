@@ -181,7 +181,14 @@ p { margin: 0 0 1em; }
 }
 @media (max-width: 980px) {
   .hero-split .hero-split-inner { grid-template-columns: 1fr; gap: 40px; }
-  .hero-portrait { aspect-ratio: 4 / 3; max-width: 520px; margin-inline: auto; width: 100%; }
+  .hero-portrait {
+    aspect-ratio: auto;
+    max-width: 640px; margin-inline: auto; width: 100%;
+    background: transparent;
+    box-shadow: var(--shadow);
+  }
+  .hero-portrait::after { display: none; }
+  .hero-portrait img { height: auto; width: 100%; object-fit: contain; }
 }
 .hero-suburb { background: linear-gradient(135deg, #0F1B2D 0%, #1A2A44 100%); }
 .hero-sub .hero-inner { padding-block: clamp(72px, 10vw, 120px); }
@@ -314,12 +321,22 @@ p { margin: 0 0 1em; }
 
 /* card grid (sales) */
 .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-.sale-card { background: var(--paper); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.sale-card {
+  background: var(--paper); border: 1px solid var(--border); border-radius: 4px;
+  overflow: hidden; display: block; color: var(--navy);
+  transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
+}
+.sale-card:hover {
+  border-color: var(--champagne); transform: translateY(-2px);
+  box-shadow: var(--shadow); color: var(--navy);
+}
 .sale-card-image {
   aspect-ratio: 4 / 3;
   background:
     linear-gradient(135deg, rgba(15,27,45,0.05), rgba(184,153,104,0.18)),
     linear-gradient(45deg, var(--bone), var(--ivory));
+  background-size: cover;
+  background-position: center;
   border-bottom: 1px solid var(--border);
   position: relative;
 }

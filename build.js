@@ -61,7 +61,7 @@ const baseHead = (title, description, canonicalPath) => `<!doctype html>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap">
-<link rel="stylesheet" href="/assets/css/styles.css?v=3">
+<link rel="stylesheet" href="/assets/css/styles.css?v=4">
 </head>
 <body>`;
 
@@ -215,12 +215,17 @@ const homeHTML = baseHead(
       <div class="section-head">
         <p class="eyebrow">Lower North Shore</p>
         <h2 class="display">Selling on the Lower North Shore? Start with your suburb.</h2>
-        <p class="lede">Every street tells a different story. Select your suburb to see the latest median values, recent record sales, and a tailored market appraisal from Alex.</p>
+        <p class="lede">Every street tells a different story. Choose your suburb to see the latest median values, recent record sales, and a tailored market appraisal from Alex.</p>
       </div>
-      <div class="suburb-grid">
-        ${SUBURBS.map(s => `<a class="suburb-tile" href="/lower-north-shore/${s.slug}/"><span class="suburb-tile-name">${s.name}</span><span class="suburb-tile-meta">${s.postcode}</span></a>`).join('')}
-      </div>
-      <p class="text-center muted-link"><a href="/lower-north-shore/">View the full Lower North Shore guide →</a></p>
+      <form class="suburb-picker" onsubmit="event.preventDefault(); var v=this.suburb.value; if(v) location.href=v;">
+        <label for="suburbSelect" class="visually-hidden">Choose your suburb</label>
+        <select id="suburbSelect" name="suburb" onchange="if(this.value) location.href=this.value;">
+          <option value="">Choose your suburb…</option>
+          ${SUBURBS.map(s => `<option value="/lower-north-shore/${s.slug}/">${s.name} · ${s.postcode}</option>`).join('')}
+        </select>
+        <button type="submit" class="btn btn-primary">Go</button>
+      </form>
+      <p class="text-center muted-link"><a href="/lower-north-shore/">Or view the full Lower North Shore guide →</a></p>
     </div>
   </section>
 

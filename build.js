@@ -87,7 +87,7 @@ const baseHead = (title, description, canonicalPath) => `<!doctype html>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap">
-<link rel="stylesheet" href="/assets/css/styles.css?v=12">
+<link rel="stylesheet" href="/assets/css/styles.css?v=13">
 </head>
 <body>`;
 
@@ -383,11 +383,16 @@ const aboutHTML = baseHead(
   '/about/'
 ) + nav() + `
 <main>
-  <section class="hero hero-sub">
-    <div class="container hero-inner">
-      <p class="eyebrow">About</p>
-      <h1>Alex Banning.</h1>
-      <p class="lede">Partner Agent and Director of Raine &amp; Horne Lower North Shore. Setting the benchmark across Sydney’s Lower North Shore since 2009.</p>
+  <section class="hero hero-sub hero-split">
+    <div class="container hero-split-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">About</p>
+        <h1>Alex Banning.</h1>
+        <p class="lede">Partner Agent and Director of Raine &amp; Horne Lower North Shore. Setting the benchmark across Sydney’s Lower North Shore since 2009.</p>
+      </div>
+      <div class="hero-portrait">
+        <img src="/alex-banning-about.jpeg" alt="Alex Banning, Director — Raine &amp; Horne Lower North Shore" loading="eager">
+      </div>
     </div>
   </section>
   <section class="section">
@@ -469,11 +474,16 @@ const contactHTML = baseHead(
   '/contact/'
 ) + nav() + `
 <main>
-  <section class="hero hero-sub">
-    <div class="container hero-inner">
-      <p class="eyebrow">Contact</p>
-      <h1>Speak with Alex.</h1>
-      <p class="lede">Direct line, direct email, and four offices across the Lower North Shore.</p>
+  <section class="hero hero-sub hero-split">
+    <div class="container hero-split-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">Contact</p>
+        <h1>Speak with Alex.</h1>
+        <p class="lede">Direct line, direct email, and four offices across the Lower North Shore.</p>
+      </div>
+      <div class="hero-badge">
+        <img src="/no1-chairmans-club.jpeg" alt="Alex Banning — #1 Chairman's Club Salespeople, Residential &amp; Rural Gold" loading="eager">
+      </div>
     </div>
   </section>
   <section class="section">
@@ -499,11 +509,16 @@ const salesHTML = baseHead(
   '/recent-sales/'
 ) + nav() + `
 <main>
-  <section class="hero hero-sub">
-    <div class="container hero-inner">
-      <p class="eyebrow">Recent sales</p>
-      <h1>Results that re-set the benchmark.</h1>
-      <p class="lede">A small selection of recent campaigns. Many of Alex’s strongest results are off-market — speak with him directly for the full picture.</p>
+  <section class="hero hero-sub hero-split">
+    <div class="container hero-split-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">Recent sales</p>
+        <h1>Results that re-set the benchmark.</h1>
+        <p class="lede">A small selection of recent campaigns. Many of Alex’s strongest results are off-market — speak with him directly for the full picture.</p>
+      </div>
+      <div class="hero-badge">
+        <img src="/no1-chairmans-club.jpeg" alt="Alex Banning — #1 Chairman's Club Salespeople, Residential &amp; Rural Gold" loading="eager">
+      </div>
     </div>
   </section>
   <section class="section">
@@ -531,13 +546,18 @@ const testimonialsHTML = baseHead(
   '/testimonials/'
 ) + nav() + `
 <main>
-  <section class="hero hero-sub">
-    <div class="container hero-inner">
-      <p class="eyebrow">Testimonials</p>
-      <h1>What clients say.</h1>
-      <p class="lede">Every review of Alex’s work is verified and lives on his Google Business Profile. Read them all, in full, with star ratings.</p>
-      <div class="hero-ctas">
-        <a class="btn btn-primary" href="${GOOGLE_REVIEWS_URL}" target="_blank" rel="noopener">Read all reviews on Google</a>
+  <section class="hero hero-sub hero-split">
+    <div class="container hero-split-inner">
+      <div class="hero-copy">
+        <p class="eyebrow">Testimonials</p>
+        <h1>What clients say.</h1>
+        <p class="lede">Every review of Alex’s work is verified and lives on his Google Business Profile. Read them all, in full, with star ratings.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-primary" href="${GOOGLE_REVIEWS_URL}" target="_blank" rel="noopener">Read all reviews on Google</a>
+        </div>
+      </div>
+      <div class="hero-portrait">
+        <img src="/alex-banning-testimonials.jpeg" alt="Alex Banning — verified five-star reviews on Google" loading="eager">
       </div>
     </div>
   </section>

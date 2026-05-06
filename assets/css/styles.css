@@ -201,6 +201,7 @@ p { margin: 0 0 1em; }
 }
 .hero-suburb { background: linear-gradient(135deg, #0F1B2D 0%, #1A2A44 100%); }
 .hero-suburb.hero-split .hero-split-inner { grid-template-columns: 1.2fr 0.8fr; align-items: center; padding: clamp(64px, 9vw, 110px) 28px; }
+.hero-sub.hero-split .hero-split-inner { padding: clamp(64px, 9vw, 110px) 28px; }
 .hero-badge {
   max-width: 380px;
   margin-left: auto;

@@ -158,7 +158,7 @@ const footer = () => `<footer class="site-footer">
     </div>
   </div>
   <div class="container footer-base">
-    <p>&copy; ${new Date().getFullYear()} Alex Banning. All rights reserved.</p>
+    <p>&copy; ${new Date().getFullYear()} Alex Banning. All rights reserved. &middot; Website by <a href="https://metatapdigital.com" target="_blank" rel="noopener">Metatap Digital</a>.</p>
   </div>
 </footer>
 <script src="/assets/js/main.js" defer></script>

@@ -6,7 +6,7 @@ Run `npm run check` at any time for the live list of placeholders.
 - [ ] **NSW licence number.** `data/site.json` → `licence` (currently `[LICENCE NO.]`, shown in the footer).
 - [ ] **Listing photography.** Run `npm run images` from a machine with internet access. The campaign image CDN (`d3g1fm0n641hm7.cloudfront.net`) was not reachable from the build environment, so 37 images (all of Hawthorne, Sharland and the Lane Cove campaigns) are still placeholders. Commit `static/assets/img/` and `data/images.manifest.json` afterwards.
 - [ ] **Hawthorne alt text and hero order.** After images are processed, open `images/contact-sheet.html`, rewrite the ten `hawthorne-*` alt texts to describe each shot, and order them pool, garden, staircase, facade.
-- [ ] **Photography permission.** Confirm with the Raine & Horne office that campaign imagery can be used (footer credit is in place).
+- [x] **Photography permission.** Raine & Horne office approved use of campaign imagery (confirmed 28 Sep 2026). Footer credit stays in place.
 - [ ] **Form endpoint.** Create a Formspree form delivering to alex.banning@rh.com.au; set `FORM_ENDPOINT` in Vercel.
 - [ ] **Privacy policy.** Review `/privacy/` against the Raine & Horne network policy.
 - [ ] **Domain.** Point alex-banning.com at the Vercel project; confirm `https://www.alex-banning.com` is the canonical host (or set `SITE_URL`).

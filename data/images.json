@@ -1,0 +1,302 @@
+{
+  "_note": "Image registry. src is a local path (relative to repo root) or a remote URL. npm run images downloads, crops, grades and converts each entry to AVIF and WebP at several widths into static/assets/img/<id>/ and records it in images.manifest.json. The site never hotlinks: an image missing from the manifest renders as a quiet placeholder.",
+  "widths": [
+    480,
+    800,
+    1200,
+    1600,
+    2400
+  ],
+  "images": [
+    {
+      "id": "hawthorne-01",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169644893__1761279707-83062-6295727.jpg",
+      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "role": "hero",
+      "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
+    },
+    {
+      "id": "hawthorne-02",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568469__1761262964-28155-6291704.jpg",
+      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "role": "hero",
+      "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
+    },
+    {
+      "id": "hawthorne-03",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568461__1761262951-28108-6291698.jpg",
+      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "role": "hero",
+      "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
+    },
+    {
+      "id": "hawthorne-04",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169644918__1761279709-82859-6295729.jpg",
+      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "role": "hero",
+      "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
+    },
+    {
+      "id": "hawthorne-05",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568463__1761262953-28143-6291699.jpg",
+      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "role": "hero",
+      "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
+    },
+    {
+      "id": "hawthorne-06",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568467__1761262959-28074-6291702.jpg",
+      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "role": "hero",
+      "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
+    },
+    {
+      "id": "hawthorne-07",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568464__1761262955-28069-6291701.jpg",
+      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "role": "hero",
+      "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
+    },
+    {
+      "id": "hawthorne-08",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568456__1761262941-27934-6291694.jpg",
+      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "role": "hero",
+      "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
+    },
+    {
+      "id": "hawthorne-09",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568452__1761262939-28093-6291690.jpg",
+      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "role": "hero",
+      "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
+    },
+    {
+      "id": "hawthorne-10",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568468__1761262962-28009-6291703.jpg",
+      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "role": "hero",
+      "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
+    },
+    {
+      "id": "sharland-01",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/218451032__1789018046-97336-Poolv3-hires.jpg",
+      "alt": "Pool at 42 Sharland Avenue, Chatswood, offered off market by Alex Banning",
+      "role": "hero"
+    },
+    {
+      "id": "sharland-02",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/218184289__1788914609-37688-YardBack-03-hires.jpg",
+      "alt": "Rear garden at 42 Sharland Avenue, Chatswood, offered off market by Alex Banning",
+      "role": "hero"
+    },
+    {
+      "id": "sharland-03",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/218184283__1788914602-37760-YardBack-01-hires.jpg",
+      "alt": "Rear yard at 42 Sharland Avenue, Chatswood, offered off market by Alex Banning",
+      "role": "hero"
+    },
+    {
+      "id": "sharland-04",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/218184209__1788914591-37698-Kitchen-hires.jpg",
+      "alt": "Kitchen at 42 Sharland Avenue, Chatswood, offered off market by Alex Banning",
+      "role": "hero"
+    },
+    {
+      "id": "sharland-05",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/218184136__1788914586-37794-DiningRoomv2-hires.jpg",
+      "alt": "Dining room at 42 Sharland Avenue, Chatswood, offered off market by Alex Banning",
+      "role": "hero"
+    },
+    {
+      "id": "sharland-06",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/218184212__1788914594-50348-LivingRoom-02-hires.jpg",
+      "alt": "Living room at 42 Sharland Avenue, Chatswood, offered off market by Alex Banning",
+      "role": "hero"
+    },
+    {
+      "id": "sharland-07",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/218184106__1788914583-50366-Bedroom-hires.jpg",
+      "alt": "Bedroom at 42 Sharland Avenue, Chatswood, offered off market by Alex Banning",
+      "role": "hero"
+    },
+    {
+      "id": "sharland-08",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/218184103__1788914581-37662-Bathroomv2-hires.jpg",
+      "alt": "Bathroom at 42 Sharland Avenue, Chatswood, offered off market by Alex Banning",
+      "role": "hero"
+    },
+    {
+      "id": "finlayson-205-01",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/217227981__1788310421-40616-LivingRoom-hires.jpg",
+      "alt": "Living room at 205/15 Finlayson Street, Lane Cove, sold by Alex Banning",
+      "grade": "warm"
+    },
+    {
+      "id": "finlayson-205-02",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/217227801__1788310402-40646-Balcony-hires.jpg",
+      "alt": "Balcony at 205/15 Finlayson Street, Lane Cove",
+      "grade": "warm"
+    },
+    {
+      "id": "finlayson-205-03",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/217227871__1788310409-40437-DiningRoom-01-hires.jpg",
+      "alt": "Dining room at 205/15 Finlayson Street, Lane Cove",
+      "grade": "warm"
+    },
+    {
+      "id": "gordon-204-01",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/218192107__1788916151-54762-LivingRoom-01-hires.jpg",
+      "alt": "Living room at 204/76-82 Gordon Crescent, Lane Cove, sold by Alex Banning",
+      "grade": "warm"
+    },
+    {
+      "id": "gordon-204-02",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/218191972__1788916130-54691-Balcony-01-hires.jpg",
+      "alt": "Balcony at 204/76-82 Gordon Crescent, Lane Cove",
+      "grade": "warm"
+    },
+    {
+      "id": "parklands-01",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/215175302__1787099989-49799-LivingRoom-02v2-hires.jpg",
+      "alt": "Living room at 2/6 Parklands Avenue, Lane Cove, sold at auction by Alex Banning",
+      "grade": "warm"
+    },
+    {
+      "id": "parklands-02",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/215175308__1787099993-49455-YardBack-01-hires.jpg",
+      "alt": "Rear garden at 2/6 Parklands Avenue, Lane Cove",
+      "grade": "warm"
+    },
+    {
+      "id": "parklands-03",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/215175251__1787099982-37515-Kitchen-hires.jpg",
+      "alt": "Kitchen at 2/6 Parklands Avenue, Lane Cove",
+      "grade": "warm"
+    },
+    {
+      "id": "mindarie-67-01",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/216261118__1787710333-64061-LivingRoom-01-hires.jpg",
+      "alt": "Living room at 67/15-21 Mindarie Street, Lane Cove, sold by Alex Banning",
+      "grade": "warm"
+    },
+    {
+      "id": "mindarie-67-02",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/216260974__1787710318-52216-Balcony-01v2-hires.jpg",
+      "alt": "Balcony at 67/15-21 Mindarie Street, Lane Cove",
+      "grade": "warm"
+    },
+    {
+      "id": "mindarie-g09-01",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/213160418__1785908496-11879-202074526131260408115807-w4205-h2803.webp.jpg",
+      "alt": "G09/28 Mindarie Street, Lane Cove, a garden residence sold by Alex Banning for $1,700,000",
+      "grade": "warm"
+    },
+    {
+      "id": "mowbray-307-01",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/212081705__1785285856-228117-LivingRoomHiRes.jpg",
+      "alt": "Living room at 307/544-550 Mowbray Road, Lane Cove, sold by Alex Banning",
+      "grade": "warm"
+    },
+    {
+      "id": "mowbray-307-02",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/212081701__1785285852-48579-Kitchen-01HiRes.jpg",
+      "alt": "Kitchen at 307/544-550 Mowbray Road, Lane Cove",
+      "grade": "warm"
+    },
+    {
+      "id": "birdwood-307-01",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/220107353__1790124781-40418-LivingRoom-03v2-hires.jpg",
+      "alt": "Living room at 307/2 Birdwood Avenue, Lane Cove, for sale with Alex Banning",
+      "grade": "warm"
+    },
+    {
+      "id": "birdwood-307-02",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/220107247__1790124759-52522-Balcony-hires.jpg",
+      "alt": "Balcony at 307/2 Birdwood Avenue, Lane Cove",
+      "grade": "warm"
+    },
+    {
+      "id": "birdwood-307-03",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/220107305__1790124769-52478-DiningRoom-hires.jpg",
+      "alt": "Dining room at 307/2 Birdwood Avenue, Lane Cove",
+      "grade": "warm"
+    },
+    {
+      "id": "centennial-408c-01",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/220111946__1790125640-42946-LivingRoom-01v2-hires.jpg",
+      "alt": "Living room at 408C/7-13 Centennial Avenue, Lane Cove, for sale with Alex Banning",
+      "grade": "warm"
+    },
+    {
+      "id": "finlayson-40-01",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/214230174__1786498341-43022-40-3-9FinlaysonSt40LaneCoveWestNSW2066-2.jpg",
+      "alt": "40/3-9 Finlayson Street, Lane Cove, for sale with Alex Banning",
+      "grade": "warm"
+    },
+    {
+      "id": "mindarie-63-01",
+      "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/218186422__1788915043-39127-LivingRoom-02-hires.jpg",
+      "alt": "Living room at 63/15-21 Mindarie Street, Lane Cove, for sale with Alex Banning",
+      "grade": "warm"
+    },
+    {
+      "id": "tobruk-01",
+      "src": "images/source/sale-2-34-tobruk-avenue-cremorne.jpg",
+      "alt": "2/34 Tobruk Avenue, Cremorne, sold by Alex Banning for $2,330,000",
+      "grade": "warm"
+    },
+    {
+      "id": "sale-404b-gordon",
+      "src": "images/source/sale-404b-84-gordon-crescent-lane-cove.jpg",
+      "alt": "404B/84 Gordon Crescent, Lane Cove, sold by Alex Banning",
+      "grade": "warm"
+    },
+    {
+      "id": "sale-60-burns-bay",
+      "src": "images/source/sale-60-302-burns-bay-road-lane-cove.jpg",
+      "alt": "60/302 Burns Bay Road, Lane Cove, sold by Alex Banning",
+      "grade": "warm"
+    },
+    {
+      "id": "sale-55-burns-bay",
+      "src": "images/source/sale-55-300a-burns-bay-road-lane-cove.jpg",
+      "alt": "55/300A Burns Bay Road, Lane Cove, sold by Alex Banning",
+      "grade": "warm"
+    },
+    {
+      "id": "sale-219-willandra",
+      "src": "images/source/sale-219-15-willandra-street-lane-cove.jpg",
+      "alt": "219/15 Willandra Street, Lane Cove, sold by Alex Banning",
+      "grade": "warm"
+    },
+    {
+      "id": "sale-406-waterview",
+      "src": "images/source/sale-406-10-waterview-drive-lane-cove.jpg",
+      "alt": "406/10 Waterview Drive, Lane Cove, sold by Alex Banning",
+      "grade": "warm"
+    },
+    {
+      "id": "alex-phone",
+      "src": "images/source/alex-portrait-phone.jpeg",
+      "alt": "Alex Banning, Partner Agent and Director, Raine & Horne Lower North Shore",
+      "crop": {
+        "left": 730,
+        "top": 40,
+        "width": 550,
+        "height": 990
+      },
+      "note": "Current site hero. Cropped to remove the baked-in campaign text."
+    },
+    {
+      "id": "alex-walking",
+      "src": "images/source/alex-portrait-walking.jpeg",
+      "alt": "Alex Banning on a leafy Lower North Shore street"
+    },
+    {
+      "id": "alex-balcony",
+      "src": "images/source/alex-portrait-balcony.jpeg",
+      "alt": "Alex Banning on a balcony overlooking a leafy Lane Cove street"
+    }
+  ]
+}

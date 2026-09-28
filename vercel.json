@@ -1,20 +1,130 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
   "trailingSlash": true,
   "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/lower-north-shore",
+      "destination": "/suburbs/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/lane-cove",
+      "destination": "/suburbs/lane-cove/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/lane-cove-north",
+      "destination": "/suburbs/lane-cove-north/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/lane-cove-west",
+      "destination": "/suburbs/lane-cove-west/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/chatswood",
+      "destination": "/suburbs/chatswood/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/longueville",
+      "destination": "/suburbs/longueville/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/riverview",
+      "destination": "/suburbs/riverview/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/greenwich",
+      "destination": "/suburbs/greenwich/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/northbridge",
+      "destination": "/suburbs/northbridge/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/castlecrag",
+      "destination": "/suburbs/castlecrag/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/artarmon",
+      "destination": "/suburbs/artarmon/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/mosman",
+      "destination": "/suburbs/mosman/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/cremorne",
+      "destination": "/suburbs/cremorne/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/neutral-bay",
+      "destination": "/suburbs/neutral-bay/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/:slug",
+      "destination": "/suburbs/",
+      "permanent": true
+    },
+    {
+      "source": "/recent-sales",
+      "destination": "/results/",
+      "permanent": true
+    },
+    {
+      "source": "/testimonials",
+      "destination": "/reviews/",
+      "permanent": true
+    },
+    {
+      "source": "/Alex-banning-hero.jpeg",
+      "destination": "/about/",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
       "headers": [
-        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
       ]
     },
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
-        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
       ]
     }
   ]

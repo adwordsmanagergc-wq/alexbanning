@@ -1,0 +1,43 @@
+{
+  "_note": "Every statistic shown on the site comes from this file and is displayed with its source and date. Update 'asAt' and the figures together.",
+  "asAt": "Sep 2026",
+  "yearsSelling": { "value": 17, "since": 2009, "source": "realestate.com.au", "asAt": "Sep 2026" },
+  "rea": {
+    "source": "realestate.com.au",
+    "period": "12 months to Sep 2026",
+    "sold": 60,
+    "medianPrice": "$1.05M",
+    "medianDaysAdvertised": 22,
+    "housesMedian": "$3.49M",
+    "townhousesMedian": "$1.93M"
+  },
+  "domain": {
+    "source": "Domain",
+    "period": "12 months to Sep 2026",
+    "sold": 57,
+    "totalValue": "$60.4M",
+    "auction": 42,
+    "privateTreaty": 15,
+    "avgDaysOnMarket": 27
+  },
+  "apartmentShare": { "apartments": 57, "of": 60, "source": "realestate.com.au", "period": "last 60 sales, Sep 2026" },
+  "reviews": {
+    "ratemyagent": { "rating": 4.8, "count": 378, "fiveStar": 319, "source": "RateMyAgent", "asAt": "Sep 2026" },
+    "realestate": {
+      "rating": 5.0, "count": 191, "source": "realestate.com.au", "asAt": "Sep 2026",
+      "tags": [
+        { "label": "Professional", "count": 154 },
+        { "label": "Suburb specialist", "count": 134 },
+        { "label": "Great communicator", "count": 101 },
+        { "label": "Great negotiator", "count": 84 },
+        { "label": "Got a great price", "count": 75 }
+      ]
+    }
+  },
+  "proofBand": [
+    { "figure": "$60M+", "label": "Sold in 12 months", "source": "Domain, 12 months to Sep 2026 ($60.4M across 57 sales)" },
+    { "figure": "22", "label": "Days median on market", "source": "realestate.com.au median days advertised, 12 months to Sep 2026" },
+    { "figure": "378", "label": "Verified reviews", "source": "RateMyAgent, Sep 2026" },
+    { "figure": "2025", "label": "Top Agent, Lane Cove", "source": "realestate.com.au 2025 Top Agent, Lane Cove" }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "alex-balcony": {
+    "w": 1280,
+    "h": 1600,
+    "widths": [
+      480,
+      800,
+      1200,
+      1280
+    ],
+    "blur": "data:image/webp;base64,UklGRpoAAABXRUJQVlA4II4AAABQBQCdASoYAB4APu1kpU2ppaMiMBgMATAdiWMAygA0bEukYsRhYat1DNdsGhqc7NnYcAAA/vYEYKlG/9TrC+6KzyNoQtJ0cm9s3fsriympp5tDm//PmE//1xOgUQDH7mca+tyM+gW2ih8bBMJHGcSejwt+bvoYdw9k/AVTqodf/XI9XQ8Dzj1+ivzv2AAA"
+  },
+  "alex-phone": {
+    "w": 550,
+    "h": 990,
+    "widths": [
+      480,
+      550
+    ],
+    "blur": "data:image/webp;base64,UklGRpgAAABXRUJQVlA4IIwAAAAQBgCdASoYACsAPt1apE2opSOiOrZoARAbiWMAqPQP8OfggLb++7DD8PhtdZYCuOxdt+X5UC/+YAAA/uv44/nfoqshFEpt5OkVCjIp1Qjt3zHC6yyPToV+lzzIFmQz5BjUh2UzyBbbw0GX026/uMlIVII+pe2PUjzP96Bd7vIdRh+lpvosRB+xGHIAAA=="
+  },
+  "alex-walking": {
+    "w": 1280,
+    "h": 1600,
+    "widths": [
+      480,
+      800,
+      1200,
+      1280
+    ],
+    "blur": "data:image/webp;base64,UklGRooAAABXRUJQVlA4IH4AAABQBQCdASoYAB4APu1oq02ppiQiMAgBMB2JQBibA9F0t8afLQ+S0pr49wVJ5cGeD2yGJAAA/qi2iOO/8rK/fq7Getk9FfryERB0VdH0nykWmhNWa3JJmKvGOq+9S2VtT2krqk41FmeYO/sBBfqbAglo2mt1cInvFNJSNgppAAA="
+  },
+  "sale-219-willandra": {
+    "w": 1232,
+    "h": 720,
+    "widths": [
+      480,
+      800,
+      1200,
+      1232
+    ],
+    "blur": "data:image/webp;base64,UklGRmIAAABXRUJQVlA4IFYAAAAQBACdASoYAA4APu1iqU2ppaOiMAgBMB2JYwC06CHgL1IDWheymGV+QADOPmS2uixMZl09cTP0XlCUOLMBZ/7t05+dTZNDlI8dlEYzC1Arkw61AYUAAA=="
+  },
+  "sale-404b-gordon": {
+    "w": 1224,
+    "h": 816,
+    "widths": [
+      480,
+      800,
+      1200,
+      1224
+    ],
+    "blur": "data:image/webp;base64,UklGRmwAAABXRUJQVlA4IGAAAADwAwCdASoYABAAPu1mqk2ppaQiMAgBMB2JZACdACHSxkwjlaf7J2X4APfTpNp+tq7Z/HRMFpP3DB9xRRj+sIxNfcfPxn/v/3Zsd3pg/TE9JvpRXcsIJnDtrfZvPl4iuAA="
+  },
+  "sale-406-waterview": {
+    "w": 1224,
+    "h": 816,
+    "widths": [
+      480,
+      800,
+      1200,
+      1224
+    ],
+    "blur": "data:image/webp;base64,UklGRloAAABXRUJQVlA4IE4AAADwAwCdASoYABAAPu1kqU2ppaQiMAgBMB2JYwCdACHDr3fXsTNn9joAAP6u93FaDNAQa7NBDDreWNN1G1TTIAppOuBAKFbYbRurfKGA8AA="
+  },
+  "sale-55-burns-bay": {
+    "w": 1024,
+    "h": 683,
+    "widths": [
+      480,
+      800,
+      1024
+    ],
+    "blur": "data:image/webp;base64,UklGRnAAAABXRUJQVlA4IGQAAABQBACdASoYABAAPu1kqk2ppaQiMAgBMB2JbACdH8Iy4AfMqa6CnBROEpCIAPxanUpEmyYYsiq73qRWofVn0IKxrQxcamVr9aWscHxFwbDtqNzekQkmiz5Xwd2wGOrL4lsaqYAA"
+  },
+  "sale-60-burns-bay": {
+    "w": 1224,
+    "h": 816,
+    "widths": [
+      480,
+      800,
+      1200,
+      1224
+    ],
+    "blur": "data:image/webp;base64,UklGRlwAAABXRUJQVlA4IFAAAADQAwCdASoYABAAPu1mq04ppaQiMAgBMB2JZwC/OCHWNHdcUMbacUAA/tNMShW9bD6oF7cfeOwLZWdD/HSc19JpQ6x2plIWi+5moQXgZuOAAA=="
+  },
+  "tobruk-01": {
+    "w": 1224,
+    "h": 816,
+    "widths": [
+      480,
+      800,
+      1200,
+      1224
+    ],
+    "blur": "data:image/webp;base64,UklGRmAAAABXRUJQVlA4IFQAAADwAwCdASoYABAAPu1orU2ppqSiMAgBMB2JYwCdMoADTqRGTSE4XVVAAP7qdogtGXkeDWM9YqtzB9Si8wt55fFmsWF+9duAQBrLOqmfIHZ5cawAAAA="
+  }
+}

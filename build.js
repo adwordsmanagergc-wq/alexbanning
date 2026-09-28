@@ -1,802 +1,803 @@
+#!/usr/bin/env node
+/*
+ * alex-banning.com static site generator. Zero runtime dependencies.
+ * Reads /data, writes the finished site to /public (copied from /static first).
+ * Run: npm run build
+ */
 const fs = require('fs');
 const path = require('path');
+const U = require('./lib/util');
+const { esc, md, pic, firstImage, hasImage, imgUrl, preloadFor, isPlaceholder, frontmatter, splitFaq } = U;
+const { SITE, ICON, abs, page, personSchema, breadcrumbSchema, breadcrumbs } = require('./lib/layout');
+const C = require('./lib/components');
 
-const PHONE = '0434 131 903';
-const PHONE_HREF = 'tel:+61434131903';
-const EMAIL = 'alex.banning@rh.com.au';
-const GOOGLE_REVIEWS_URL = 'https://share.google/ALCSJNGulIZk4l4eU';
-const OFFICES = [
-  { name: 'Lane Cove', addr: '69 Longueville Road, Lane Cove NSW 2066' },
-  { name: 'Willoughby', addr: '293 Penshurst Street, Willoughby NSW 2068' },
-  { name: 'Mosman', addr: '145 Middle Head Road, Mosman NSW 2088' },
-  { name: 'Northbridge', addr: '79 Sailors Bay Road, Northbridge NSW 2063' },
-];
+const OUT = path.join(U.ROOT, 'public');
 
-const RECENT_SALES = [
-  { suburb: 'Cremorne', address: '2/34 Tobruk Avenue, Cremorne', price: '$2,330,000', date: 'Nov 2025', url: 'https://www.raineandhorne.com.au/lns/properties/2-34-tobruk-avenue-cremorne-2090-new-south-wales' },
-  { suburb: 'Lane Cove', address: '404B/84 Gordon Crescent, Lane Cove', price: '$1,120,000', date: 'Jun 2025', url: 'https://www.raineandhorne.com.au/lns/properties/404b-84-gordon-crescent-lane-cove-2066-new-south-wales' },
-  { suburb: 'Lane Cove', address: '60/302 Burns Bay Road, Lane Cove', price: '$995,000', date: 'Aug 2024', url: 'https://www.raineandhorne.com.au/lns/properties/60-302-burns-bay-road-lane-cove-2066-new-south-wales' },
-  { suburb: 'Lane Cove', address: '55/300A Burns Bay Road, Lane Cove', price: '$925,000', date: 'Aug 2025', url: 'https://www.raineandhorne.com.au/lns/properties/55-300a-burns-bay-road-lane-cove-2066-new-south-wales' },
-  { suburb: 'Lane Cove', address: '219/15 Willandra Street, Lane Cove', price: '$890,000', date: 'Feb 2024', url: 'https://www.raineandhorne.com.au/lns/properties/219-15-willandra-street-lane-cove-2066-new-south-wales' },
-  { suburb: 'Lane Cove', address: '406/10 Waterview Drive, Lane Cove', price: '$860,000', date: 'Nov 2024', url: 'https://www.raineandhorne.com.au/lns/properties/406-10-waterview-drive-lane-cove-2066-new-south-wales' },
-  { suburb: 'Lane Cove', address: '8/38 Cope Street, Lane Cove', price: '$820,000', date: 'Dec 2025', url: 'https://www.raineandhorne.com.au/lns/properties/8-38-cope-street-lane-cove-2066-new-south-wales' },
-  { suburb: 'Lane Cove', address: '7/106 Burns Bay Road, Lane Cove', price: '$765,000', date: 'Aug 2025', url: 'https://www.raineandhorne.com.au/lns/properties/7-106-burns-bay-road-lane-cove-2066-new-south-wales' },
-  { suburb: 'Lane Cove', address: '59/31-39 Mindarie Street, Lane Cove', price: '$660,000', date: 'Feb 2025', url: 'https://www.raineandhorne.com.au/lns/properties/59-31-39-mindarie-street-lane-cove-2066-new-south-wales' },
-];
+// ---------- Data ----------
+const stats = U.readJSON('data/stats.json');
+const awards = U.readJSON('data/awards.json');
+const reviews = U.readJSON('data/reviews.json');
+const salesData = U.readJSON('data/sales.json');
+const listingsData = U.readJSON('data/listings.json');
+const caseStudies = U.readJSON('data/case-studies.json').caseStudies;
 
-const renderSaleCards = (sales) => sales.map(s => {
-  const slug = s.address.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-  return `<a class="sale-card" href="${s.url}" target="_blank" rel="noopener" aria-label="${s.address} — sold ${s.price} ${s.date}">
-    <div class="sale-card-image" style="background-image: url('/assets/img/sales/${slug}.jpg');"></div>
-    <div class="sale-card-body">
-      <p class="eyebrow">${s.suburb}</p>
-      <h3>${s.price}</h3>
-      <p class="muted">${s.address.replace(', ' + s.suburb, '')}</p>
-      <p class="tag">Sold · ${s.date}</p>
-    </div>
-  </a>`;
-}).join('');
+const sales = [...salesData.sales].sort((a, b) => (b.price || 0) - (a.price || 0));
+const saleById = Object.fromEntries(sales.map(s => [s.id, s]));
+const listings = listingsData.listings;
+const privateListings = listings.filter(l => l.private);
+const publicListings = listings.filter(l => !l.private);
 
-const SUBURBS = [
-  { slug: 'lane-cove', name: 'Lane Cove', postcode: '2066', tone: 'volume', neighbours: ['lane-cove-north','lane-cove-west','linley-point','longueville','riverview','greenwich'], streets: 'Longueville Road, Centennial Avenue, Mowbray Road and Burns Bay Road', specialty: 'federation homes, premium apartments and family residences', hook: 'Lane Cove’s most recommended agent on realestate.com.au and a consistent street-record holder.', profile: 'Home to around 12,000 residents and centred on Lane Cove Plaza and The Canopy, the suburb’s housing stock spans federation cottages, post-war family homes and contemporary apartments around the Pacific Highway corridor. Lane Cove National Park borders the suburb to the north-east, and the upcoming Crows Nest metro plus existing B-Line buses keep the CBD within roughly 25 minutes. The buyer pool is genuinely mixed — first-home upgraders, established families and downsizers from larger LNS suburbs all compete here.' },
-  { slug: 'mosman', name: 'Mosman', postcode: '2088', tone: 'prestige', neighbours: ['cremorne','neutral-bay','northbridge','castlecrag','middle-cove'], streets: 'Beauty Point, Balmoral, Middle Head Road and the harbourside pockets above Chinamans Beach', specialty: 'harbour-front homes, federation residences and prestige apartments', hook: 'Discreet, record-setting representation backed by a private buyer database.', profile: 'Mosman is the Lower North Shore’s prestige flagship — roughly 31,000 residents and predominantly owner-occupied. The market spans harbour-front houses through Beauty Point and Balmoral, federation residences above Middle Head Road, and contemporary apartments near Spit Junction. Mosman, Old Cremorne and South Mosman wharves connect to Circular Quay in under 25 minutes, and the suburb hosts some of Sydney’s most highly regarded public and private schools.' },
-  { slug: 'cremorne', name: 'Cremorne', postcode: '2090', tone: 'village', neighbours: ['mosman','neutral-bay','northbridge','cammeray'], streets: 'Cremorne Point, Murdoch Street, Spofforth Street and Military Road', specialty: 'Art Deco apartments, period homes and harbour-glimpse residences', hook: 'A village market with genuine depth — done quietly and well.', profile: 'Cremorne pairs village amenity with one of Sydney’s best-known harbour pockets. The suburb is roughly half apartment stock — Art Deco buildings around Spofforth Street and modern infill near Military Road — alongside family streets connecting directly to Mosman. Cremorne Wharf is a short walk from the foreshore, and the Hayden Orpheum cinema and Military Road shopping anchor a strong lifestyle offering.' },
-  { slug: 'neutral-bay', name: 'Neutral Bay', postcode: '2089', tone: 'apartments', neighbours: ['cremorne','mosman','kirribilli','north-sydney','cammeray'], streets: 'Wycombe Road, Ben Boyd Road, Kurraba Road and Military Road', specialty: 'security apartment buildings, period units, terraces and family homes', hook: 'City access, ferry connection and village amenity — calibrated campaigns for a distinct buyer pool.', profile: 'Neutral Bay is one of the LNS’s most active apartment markets — ferry-connected to the CBD via Hayes Street and Kurraba wharves, with Military Road’s restaurant and retail strip running through the middle. Most stock is mid-rise apartments and a small share of period houses and terraces in pockets above Wycombe Road. The suburb attracts a mix of first-home upgraders, downsizers and established LNS investors.' },
-  { slug: 'kirribilli', name: 'Kirribilli', postcode: '2061', tone: 'heritage-harbour', neighbours: ['milsons-point','lavender-bay','mcmahons-point','north-sydney','neutral-bay'], streets: 'Carabella Street, Broughton Street, Holbrook Avenue and Kirribilli Avenue', specialty: 'heritage Art Deco apartments, harbour-front terraces and architectural homes', hook: 'Heritage, harbour and a buyer pool that knows what it wants.', profile: 'Kirribilli sits directly under the Harbour Bridge with two ferry wharves and a postcode that turns over rarely. The market is dominated by heritage Art Deco apartment buildings and a tightly held set of harbour-front terraces along Carabella Street and Kirribilli Avenue. Buyers tend to be sophisticated owner-occupiers — often returning to the suburb after years away.' },
-  { slug: 'milsons-point', name: 'Milsons Point', postcode: '2061', tone: 'harbour-apartments', neighbours: ['kirribilli','lavender-bay','mcmahons-point','north-sydney'], streets: 'Alfred Street, Glen Street, Lavender Street and Bay View Street', specialty: 'harbour-view apartments, heritage stock and bridge-side residences', hook: 'Bridge views, ferry access and a buyer pool that arrives ready to compete.', profile: 'Milsons Point’s combination of Harbour Bridge views, ferry access and walking-distance proximity to North Sydney has driven consistent demand for over a decade. The bulk of stock is apartment buildings — Bradfield Park’s premium high-rises through to heritage Art Deco buildings near Lavender Street. The suburb’s bridge-side position makes it one of Sydney’s most photographed addresses.' },
-  { slug: 'lavender-bay', name: 'Lavender Bay', postcode: '2060', tone: 'tightly-held', neighbours: ['milsons-point','mcmahons-point','kirribilli','north-sydney','waverton'], streets: 'Walker Street, Middlemiss Street, King George Street and Lavender Street', specialty: 'harbour-front houses and tightly held heritage apartments', hook: 'A small, tightly held market where every campaign matters.', profile: 'Lavender Bay turns over only a handful of properties each year — a small footprint of harbour-front homes and tightly held heritage apartments tucked beneath the Harbour Bridge. Wendy Whiteley’s Secret Garden and Luna Park frame the foreshore, and the suburb shares a wharf with Milsons Point. Buyer reach and campaign judgement matter more here than open marketing.' },
-  { slug: 'mcmahons-point', name: 'McMahons Point', postcode: '2060', tone: 'peninsula', neighbours: ['lavender-bay','milsons-point','kirribilli','north-sydney','waverton'], streets: 'Blues Point Road, Henry Lawson Avenue, Bank Street and Union Street', specialty: 'Victorian terraces, harbour-front apartments and peninsula houses', hook: 'One of Sydney’s most distinctive small markets.', profile: 'McMahons Point occupies a compact peninsula with views straight to the Opera House. The signature streetscape is the Victorian terrace strip along Blues Point Road, with harbour-front apartments and houses arranged around the foreshore. The suburb’s village feel and ferry access keep demand consistent year-round.' },
-  { slug: 'waverton', name: 'Waverton', postcode: '2060', tone: 'family', neighbours: ['wollstonecraft','mcmahons-point','lavender-bay','north-sydney','crows-nest'], streets: 'Bay Road, Larkin Street, Carr Street and Bayview Avenue', specialty: 'federation homes, post-war family houses and harbour-glimpse apartments', hook: 'Family streets, harbour pockets and a strong school-led buyer pool.', profile: 'Waverton offers a quiet, tightly held alternative to its busier neighbours. Housing is predominantly federation homes and post-war family houses on streets like Bay Road, with a smaller apartment market near the train station. Waverton station puts the CBD within a 12-minute train, and the school-led buyer pool keeps demand consistent year-round.' },
-  { slug: 'wollstonecraft', name: 'Wollstonecraft', postcode: '2065', tone: 'family', neighbours: ['waverton','crows-nest','st-leonards','greenwich','naremburn'], streets: 'Shirley Road, Berry Street, Belgrave Street and Holtermann Street', specialty: 'period family homes, character apartments and modern townhouses', hook: 'Family streets, professional buyers, premium results.', profile: 'Wollstonecraft’s leafy streets, school zones and modern apartment buildings around Berry Square attract a strong professional family buyer pool. The suburb mixes period family homes higher up Shirley Road with contemporary stock near the Pacific Highway. Wollstonecraft and St Leonards stations both serve the area, putting the CBD within a 14-minute commute.' },
-  { slug: 'crows-nest', name: 'Crows Nest', postcode: '2065', tone: 'lifestyle', neighbours: ['st-leonards','naremburn','cammeray','north-sydney','wollstonecraft'], streets: 'Willoughby Road, Alexander Street, Ernest Street and Falcon Street', specialty: 'terraces, modern apartments and village townhouses', hook: 'A village that punches well above its weight — now reshaped by metro.', profile: 'Crows Nest’s restaurant-led village strip along Willoughby Road and the new Crows Nest metro station have made it one of the LNS’s most active investment and lifestyle markets. The suburb spans Victorian terraces around the village core, modern apartment buildings, and pockets of family streets between the Pacific Highway and St Leonards. Buyer demand is broad — first-home owners, investors, downsizers and families.' },
-  { slug: 'north-sydney', name: 'North Sydney', postcode: '2060', tone: 'apartments', neighbours: ['kirribilli','milsons-point','neutral-bay','cammeray','crows-nest','waverton'], streets: 'Walker Street, Miller Street, McLaren Street and Mount Street', specialty: 'premium apartment buildings, heritage terraces and edge-of-village houses', hook: 'One of the LNS’s most active apartment markets — building-specific judgement matters.', profile: 'North Sydney’s apartment market turns over more frequently than most LNS suburbs, with city-edge towers along Walker and Miller Streets, mid-rise heritage stock around Mount Street, and pockets of conservation terraces near Kirribilli. The CBD is a single train stop or fifteen-minute walk away, and the suburb’s commercial hub means active downsizer, investor and first-home buyer demand year-round.' },
-  { slug: 'cammeray', name: 'Cammeray', postcode: '2062', tone: 'family', neighbours: ['naremburn','crows-nest','northbridge','north-sydney','cremorne'], streets: 'Amherst Street, Park Avenue, Palmer Street and Warringah Road', specialty: 'federation homes, family houses, period apartments and townhouses', hook: 'Family streets, golf-course pockets and a buyer pool that knows what it wants.', profile: 'Cammeray’s family streets, golf-course pockets and easy access to Northbridge Plaza and Military Road make it one of the LNS’s most consistently in-demand family markets. Property stock is predominantly federation homes, post-war houses, period apartments and modern townhouses. The CBD is a 20-minute B-Line bus ride from Cammeray Square.' },
-  { slug: 'naremburn', name: 'Naremburn', postcode: '2065', tone: 'federation', neighbours: ['cammeray','crows-nest','willoughby','artarmon','northbridge'], streets: 'Slade Street, Central Street, Park Road and Smith Street', specialty: 'worker’s cottages, federation homes and modern infill', hook: 'A village pocket with rare turnover and high vendor expectations.', profile: 'Naremburn is a small, tightly held federation village wedged between Crows Nest, Cammeray and Willoughby. Worker’s cottages, federation cottages and modern infill make up most of the stock, with rare turnover and high vendor expectations. The new Crows Nest metro is within easy walking distance, opening Naremburn to a wider buyer pool than ever before.' },
-  { slug: 'northbridge', name: 'Northbridge', postcode: '2063', tone: 'family-architectural', neighbours: ['castlecrag','middle-cove','castle-cove','cammeray','willoughby'], streets: 'Sailors Bay Road, Eastern Valley Way, Strathallen Avenue and the streets above the marina', specialty: 'architectural homes, federation residences and harbour-front houses', hook: 'One of the LNS’s premier family markets — architectural homes, large blocks and waterway access.', profile: 'Northbridge is one of the LNS’s premier family markets — large blocks, leafy streets and waterway access along Sailors Bay. The market spans architectural and federation homes on the ridge, contemporary houses on the slopes, and harbour-front properties below the bridge. Northbridge Plaza anchors local amenity, and Eastern Valley Way connects to the CBD in roughly 20 minutes by car.' },
-  { slug: 'willoughby', name: 'Willoughby', postcode: '2068', tone: 'family-village', neighbours: ['artarmon','naremburn','northbridge','castlecrag','chatswood'], streets: 'High Street, Penshurst Street, Edinburgh Road and Mowbray Road', specialty: 'federation cottages, California bungalows, family-renovated homes and modern townhouses', hook: 'A village market with deep buyer demand and consistent capital growth.', profile: 'Willoughby’s federation village character, school zoning and consistent capital growth make it a destination market for upgrading LNS families. Stock includes federation cottages, California bungalows, family-renovated homes and modern townhouses. The High Street village anchors local life, with Chatswood and St Leonards stations within easy reach.' },
-  { slug: 'artarmon', name: 'Artarmon', postcode: '2064', tone: 'family-investment', neighbours: ['willoughby','chatswood','st-leonards','naremburn'], streets: 'Hampden Road, Cleveland Street, Wilkes Avenue and McMillan Road', specialty: 'federation homes, post-war family houses and apartment stock', hook: 'Strong school zones, train access and a diverse buyer pool.', profile: 'Artarmon’s strong school zones, train station and tightly held housing stock have driven sustained demand from family upgraders and investors alike. The suburb mixes federation homes around the village, post-war family houses on streets like Hampden Road, and a smaller apartment market near the station. Artarmon station puts the CBD within a 16-minute train.' },
-  { slug: 'chatswood', name: 'Chatswood', postcode: '2067', tone: 'apartments-diverse', neighbours: ['artarmon','willoughby','roseville','st-leonards'], streets: 'Help Street, Anderson Street, Victoria Avenue and Archer Street', specialty: 'premium apartment buildings, family streets and townhouse developments', hook: 'One of the LNS’s largest and most active markets — deep buyer demand across stock types.', profile: 'Chatswood is the LNS’s largest and most active market — premium apartment buildings dominate the city centre, with family streets and townhouse stock further out. The Chatswood metro and train interchange, together with Westfield and Chatswood Chase, make it the LNS’s most accessible and amenity-rich suburb. Demand spans investors, downsizers, first-home buyers and families.' },
-  { slug: 'st-leonards', name: 'St Leonards', postcode: '2065', tone: 'apartments-investment', neighbours: ['crows-nest','wollstonecraft','artarmon','naremburn'], streets: 'Pacific Highway, Atchison Street, River Road and Park Road', specialty: 'premium apartment buildings, townhouses and lifestyle properties', hook: 'A market reshaped by metro, with strong investor and downsizer demand.', profile: 'St Leonards has been reshaped by the new metro and the redeveloped St Leonards–Crows Nest precinct. Premium apartment buildings dominate, with a smaller market of townhouses and lifestyle properties on the suburb’s edges. The new metro station, combined with the existing train and Royal North Shore Hospital, drives strong investor and downsizer demand.' },
-  { slug: 'greenwich', name: 'Greenwich', postcode: '2065', tone: 'hidden-waterfront', neighbours: ['riverview','longueville','wollstonecraft','lane-cove'], streets: 'Greenwich Road, Mitchell Street, Kingslangley Road and George Street', specialty: 'waterfront houses, large family blocks and tightly held streets', hook: 'One of the LNS’s quietest premium markets.', profile: 'Greenwich is one of the LNS’s quietest premium markets — large family blocks, waterfront pockets along the Lane Cove River, and tightly held streets above Greenwich Road. The suburb’s small footprint and consistent owner-occupier demand mean turnover is modest and prices have grown steadily for over a decade. Greenwich Public School and ferry access from Greenwich wharf round out the offering.' },
-  { slug: 'riverview', name: 'Riverview', postcode: '2066', tone: 'prestige-family', neighbours: ['longueville','greenwich','lane-cove','linley-point'], streets: 'Tambourine Bay Road, Stuart Street, Wharf Road and the streets above Tambourine Bay', specialty: 'prestige family homes, waterfront properties and large-block residences', hook: 'Family prestige, quietly handled — close to St Ignatius’.', profile: 'Riverview combines waterfront access on Tambourine Bay with proximity to St Ignatius’ College — one of Sydney’s most prestigious independent schools. The market is dominated by large family homes on substantial blocks, with rare turnover and a buyer pool that prioritises privacy and space. Many of the suburb’s strongest results are achieved off-market.' },
-  { slug: 'longueville', name: 'Longueville', postcode: '2066', tone: 'blue-chip-waterfront', neighbours: ['riverview','linley-point','greenwich','lane-cove'], streets: 'Stuart Street, Arabella Street, Kenneth Street and Mary Street', specialty: 'deep-water frontages and tightly held family streets', hook: 'Discretion, judgement, results — one of the LNS’s most rarefied markets.', profile: 'Longueville is one of the LNS’s most rarefied markets — deep-water frontages, tightly held family streets and limited annual turnover. The buyer pool is small, sophisticated and well-resourced, and the strongest results in the suburb are routinely off-market. The Longueville Sailing Club and the suburb’s leafy peninsula geography frame an unmistakable character.' },
-  { slug: 'linley-point', name: 'Linley Point', postcode: '2066', tone: 'boutique-waterfront', neighbours: ['longueville','riverview','greenwich','lane-cove-west'], streets: 'Mary Street, Decarle Street and Hill Street', specialty: 'waterfront houses and prestige family residences', hook: 'A boutique waterfront market with rare turnover.', profile: 'Linley Point is a small, almost-private waterfront pocket on the Lane Cove River. With a tiny footprint and low turnover, every campaign is a significant event. Stock is almost entirely waterfront and water-access houses, with a buyer pool that intersects heavily with Longueville and Riverview.' },
-  { slug: 'lane-cove-north', name: 'Lane Cove North', postcode: '2066', tone: 'apartments-family', neighbours: ['lane-cove','lane-cove-west','artarmon','greenwich','chatswood'], streets: 'Centennial Avenue, Mowbray Road, Pacific Highway and Mindarie Street', specialty: 'modern apartment buildings, townhouses and family streets', hook: 'A high-turnover apartment and townhouse market with strong family demand.', profile: 'Lane Cove North is one of the LNS’s highest-turnover apartment and townhouse markets — modern buildings along Centennial Avenue and the Pacific Highway corridor, alongside family pockets on quieter streets. The suburb attracts a notably broad buyer pool — first-home buyers, upgraders, downsizers and investors all compete here. The location bridges Lane Cove village and the Chatswood / St Leonards corridors.' },
-  { slug: 'lane-cove-west', name: 'Lane Cove West', postcode: '2066', tone: 'family', neighbours: ['lane-cove','lane-cove-north','linley-point','riverview','longueville'], streets: 'Cullen Street, Karilla Avenue, Greenlands Road and Mars Road', specialty: 'family homes, period houses and townhouses', hook: 'Quiet family streets, large blocks and a buyer pool that values exactly that.', profile: 'Lane Cove West is the family-pocket alternative to Lane Cove proper — quieter streets, larger blocks and bushland edges along the Lane Cove River. Stock is predominantly federation and post-war family homes, with a small share of townhouses and apartments. Cullen Street’s village shops and the Lane Cove West Public School zone anchor local life.' },
-  { slug: 'castlecrag', name: 'Castlecrag', postcode: '2068', tone: 'architectural', neighbours: ['middle-cove','castle-cove','northbridge','willoughby'], streets: 'Edinburgh Road, The Bulwark, The Citadel, The Rampart and The Postern', specialty: 'Walter Burley Griffin homes, architectural houses and waterfront properties', hook: 'A market for the architecturally literate buyer.', profile: 'Castlecrag is Sydney’s architectural treasure — Walter Burley Griffin’s original master-planned community, with characteristic stone and brick homes set on bushland blocks. Many streets carry medieval names (The Bulwark, The Citadel, The Rampart), and the buyer pool prioritises architectural integrity as much as location. The suburb sits on a small peninsula with waterfront pockets and direct access to Eastern Valley Way.' },
-  { slug: 'middle-cove', name: 'Middle Cove', postcode: '2068', tone: 'family-bushland', neighbours: ['castlecrag','castle-cove','northbridge','willoughby','roseville'], streets: 'Sugarloaf Crescent, Eastern Valley Way and Rembrandt Drive', specialty: 'large family blocks, bushland-edge houses and architectural homes', hook: 'A quiet family market with sustained demand for space and privacy.', profile: 'Middle Cove is a quiet bushland-edge family suburb between Castlecrag and Castle Cove, with large blocks and a peaceful streetscape. Stock is predominantly architectural and post-war family homes, with rare turnover. The Roseville Bridge connects the suburb to the upper North Shore, and Eastern Valley Way provides direct access to Northbridge and the city.' },
-  { slug: 'castle-cove', name: 'Castle Cove', postcode: '2069', tone: 'family-waterfront', neighbours: ['middle-cove','castlecrag','roseville','northbridge'], streets: 'Deepwater Road, Mooramie Avenue, Babbage Road and Eastern Valley Way', specialty: 'family homes and waterfront residences in tightly held pockets', hook: 'Bushland-edge homes, waterfront pockets and a discerning family buyer pool.', profile: 'Castle Cove pairs bushland-edge family streets with rare waterfront pockets along Sailors Bay and Sugarloaf Bay. The market is dominated by architectural family homes on substantial blocks, with strong demand from upgrading LNS families and prestige downsizers. Castle Cove Public School and the suburb’s small village shops anchor local life.' },
-  { slug: 'roseville', name: 'Roseville', postcode: '2069', tone: 'federation-family', neighbours: ['castle-cove','chatswood','middle-cove','willoughby'], streets: 'Archbold Road, Boundary Street, Lord Street and Bancroft Avenue', specialty: 'federation homes, post-war family residences and prestige pockets', hook: 'Heritage federation streetscapes, school-led demand and family buyers ready to compete.', profile: 'Roseville is one of the upper North Shore’s most prestigious family markets — heritage federation streetscapes, school zoning and a buyer pool that competes hard for limited stock. The suburb spans federation homes around Roseville Park, post-war family houses and prestige pockets toward Roseville Chase. Roseville station puts the CBD within a 22-minute train.' },
-];
-
-const slugToName = Object.fromEntries(SUBURBS.map(s => [s.slug, s.name]));
-
-const baseHead = (title, description, canonicalPath) => `<!doctype html>
-<html lang="en-AU">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${title}</title>
-<meta name="description" content="${description}">
-<link rel="canonical" href="https://alexbanning.com.au${canonicalPath}">
-<meta property="og:title" content="${title}">
-<meta property="og:description" content="${description}">
-<meta property="og:type" content="website">
-<meta property="og:locale" content="en_AU">
-<meta name="theme-color" content="#0F1B2D">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap">
-<link rel="stylesheet" href="/assets/css/styles.css?v=13">
-</head>
-<body>`;
-
-const nav = (depth = 0) => {
-  const p = '/';
-  return `<header class="site-header" id="siteHeader">
-  <div class="container header-inner">
-    <a class="brand" href="${p}"><span class="brand-mark">AB</span><span class="brand-name">Alex Banning</span></a>
-    <nav class="primary-nav" aria-label="Primary">
-      <a href="${p}about/">About</a>
-      <a href="${p}lower-north-shore/">Suburbs</a>
-      <a href="${p}recent-sales/">Recent Sales</a>
-      <a href="${p}testimonials/">Testimonials</a>
-      <a href="${p}contact/">Contact</a>
-      <a class="nav-cta" href="${p}appraisal/">Free Appraisal</a>
-    </nav>
-    <button class="nav-toggle" aria-label="Open menu" aria-controls="mobileMenu" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
-  </div>
-  <div class="mobile-menu" id="mobileMenu" hidden>
-    <a href="${p}about/">About</a>
-    <a href="${p}lower-north-shore/">Suburbs</a>
-    <a href="${p}recent-sales/">Recent Sales</a>
-    <a href="${p}testimonials/">Testimonials</a>
-    <a href="${p}contact/">Contact</a>
-    <a class="nav-cta" href="${p}appraisal/">Free Appraisal</a>
-    <a class="nav-tel" href="${PHONE_HREF}">Call ${PHONE}</a>
-  </div>
-</header>
-<a class="sticky-call" href="${PHONE_HREF}" aria-label="Call Alex Banning">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-  <span>Call Alex</span>
-</a>`;
-};
-
-const footer = () => `<footer class="site-footer">
-  <div class="container footer-grid">
-    <div class="footer-brand">
-      <div class="brand-mark big">AB</div>
-      <p class="footer-tag">Partner Agent &amp; Director<br>Raine &amp; Horne Lower North Shore</p>
-      <p><a href="${PHONE_HREF}">${PHONE}</a><br><a href="mailto:${EMAIL}">${EMAIL}</a></p>
-    </div>
-    <div class="footer-col">
-      <h4>Offices</h4>
-      <ul class="plain-list">
-        ${OFFICES.map(o => `<li><strong>${o.name}</strong><br>${o.addr}</li>`).join('')}
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Explore</h4>
-      <ul class="plain-list">
-        <li><a href="/about/">About Alex</a></li>
-        <li><a href="/lower-north-shore/">Suburb Guides</a></li>
-        <li><a href="/recent-sales/">Recent Sales</a></li>
-        <li><a href="/testimonials/">Testimonials</a></li>
-        <li><a href="/appraisal/">Free Appraisal</a></li>
-        <li><a href="/contact/">Contact</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Compliance</h4>
-      <p class="small">Banning Enterprises Pty Ltd, trading as Raine &amp; Horne Lower North Shore. Licensed Agent. Real Estate Licence No. [INSERT LICENCE].</p>
-      <ul class="plain-list small">
-        <li><a href="/privacy/">Privacy Policy</a></li>
-        <li><a href="/terms/">Terms of Use</a></li>
-      </ul>
-    </div>
-  </div>
-  <div class="container footer-base">
-    <p>&copy; ${new Date().getFullYear()} Alex Banning. All rights reserved. &middot; Website by <a href="https://metatapdigital.com" target="_blank" rel="noopener">Metatap Digital</a>.</p>
-  </div>
-</footer>
-<script src="/assets/js/main.js" defer></script>
-</body></html>`;
-
-const appraisalForm = (suburb = '', variant = 'inline') => {
-  const action = '/thank-you/';
-  const suburbValue = suburb ? ` value="${suburb}"` : '';
-  return `<form class="appraisal-form ${variant}" method="POST" action="${action}" data-form="appraisal">
-  <input type="hidden" name="suburb" id="formSuburb"${suburbValue}>
-  <div class="grid-2">
-    <label>Property address<input type="text" name="address" required autocomplete="street-address" placeholder="e.g. 12 Mowbray Road, Lane Cove"></label>
-    <label>Full name<input type="text" name="name" required autocomplete="name"></label>
-    <label>Mobile<input type="tel" name="phone" required autocomplete="tel" pattern="[0-9 +()-]{8,}"></label>
-    <label>Email<input type="email" name="email" required autocomplete="email"></label>
-  </div>
-  <label class="select-label">Timeframe to sell
-    <select name="timeframe">
-      <option>Just curious</option><option>1–3 months</option><option>3–6 months</option><option>6–12 months</option>
-    </select>
-  </label>
-  <label class="checkbox"><input type="checkbox" name="consent" required> I consent to Alex Banning contacting me about this appraisal.</label>
-  <button type="submit" class="btn btn-primary btn-block">Request my appraisal</button>
-  <p class="form-note">Confidential. Used only to prepare your appraisal.</p>
-</form>`;
-};
-
-const breadcrumbs = (items) => {
-  const itemList = items.map((it, i) => `{"@type":"ListItem","position":${i+1},"name":"${it.name}","item":"https://alexbanning.com.au${it.url}"}`).join(',');
-  return `<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[${itemList}]}<\/script>`;
-};
-
-const realEstateAgentSchema = `<script type="application/ld+json">{"@context":"https://schema.org","@type":"RealEstateAgent","name":"Alex Banning","url":"https://alexbanning.com.au","telephone":"${PHONE}","email":"${EMAIL}","jobTitle":"Partner Agent & Director","worksFor":{"@type":"RealEstateAgent","name":"Raine & Horne Lower North Shore"},"areaServed":${JSON.stringify(SUBURBS.map(s=>s.name))}}<\/script>`;
-
-// ===== HOME =====
-const homeHTML = baseHead(
-  'Alex Banning | Top-Selling Real Estate Agent — Lower North Shore',
-  'Alex Banning is the Lower North Shore’s most recommended agent, holding block, street and suburb records since 2009. Request your free market appraisal.',
-  '/'
-) + nav() + `
-<main>
-  <section class="hero hero-home hero-split">
-    <div class="container hero-split-inner">
-      <div class="hero-copy">
-        <p class="eyebrow">Raine &amp; Horne Lower North Shore — Partner Agent</p>
-        <h1>The Lower North Shore’s most recommended agent.</h1>
-        <p class="lede">Alex Banning has been quietly setting the benchmark across Sydney’s Lower North Shore since 2009 — holding block, street and suburb records, and consistently ranked among Australia’s leading sales agents.</p>
-        <div class="hero-ctas">
-          <a class="btn btn-primary" href="/appraisal/">Request a free market appraisal</a>
-          <a class="btn btn-ghost" href="/recent-sales/">View recent record sales</a>
-        </div>
-      </div>
-      <div class="hero-portrait">
-        <img src="/Alex-banning-hero.jpeg" alt="Alex Banning, Director — Raine &amp; Horne Lower North Shore" loading="eager" fetchpriority="high">
-      </div>
-    </div>
-  </section>
-
-  <section class="trust-strip">
-    <div class="container trust-grid">
-      <div><strong>Since 2009</strong><span>Selling on the Lower North Shore</span></div>
-      <div><strong>Records held</strong><span>Block, street and suburb records</span></div>
-      <div><strong>#1 in Lane Cove</strong><span>Most recommended on realestate.com.au</span></div>
-      <div><strong>Top performer</strong><span>Within the Raine &amp; Horne network</span></div>
-    </div>
-  </section>
-
-  <section class="section about-strip">
-    <div class="container two-col">
-      <div>
-        <p class="eyebrow">About Alex</p>
-        <h2 class="display">A different standard of representation.</h2>
-      </div>
-      <div class="prose">
-        <p>Real estate at the top of the market is rarely about the loudest voice in the room. For Alex Banning, it’s about preparation, judgement, and a steadfast commitment to the result his clients deserve.</p>
-        <p>As a Director of Raine &amp; Horne Lower North Shore, Alex has built a reputation for delivering record prices across both apartment and house markets — from harbourside homes in Mosman and Northbridge, to landmark federation residences in Lane Cove and architectural terraces in Kirribilli.</p>
-        <p>His clients return to him, and refer their friends to him, because he treats every campaign as if it were his own.</p>
-        <p><a class="link-arrow" href="/about/">Read more about Alex →</a></p>
-      </div>
-    </div>
-  </section>
-
-  <section class="section section-tinted" id="map">
-    <div class="container">
-      <div class="section-head">
-        <p class="eyebrow">Lower North Shore</p>
-        <h2 class="display">Selling on the Lower North Shore? Start with your suburb.</h2>
-        <p class="lede">Every street tells a different story. Choose your suburb to see the latest median values, recent record sales, and a tailored market appraisal from Alex.</p>
-      </div>
-      <form class="suburb-picker" onsubmit="event.preventDefault(); var v=this.suburb.value; if(v) location.href=v;">
-        <label for="suburbSelect" class="visually-hidden">Choose your suburb</label>
-        <select id="suburbSelect" name="suburb" onchange="if(this.value) location.href=this.value;">
-          <option value="">Choose your suburb…</option>
-          ${SUBURBS.map(s => `<option value="/lower-north-shore/${s.slug}/">${s.name} · ${s.postcode}</option>`).join('')}
-        </select>
-        <button type="submit" class="btn btn-primary">Go</button>
-      </form>
-      <p class="text-center muted-link"><a href="/lower-north-shore/">Or view the full Lower North Shore guide →</a></p>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <div class="section-head">
-        <p class="eyebrow">Recent record sales</p>
-        <h2 class="display">Results that re-set the benchmark.</h2>
-        <p class="lede">A small selection of recent campaigns. Many of Alex’s strongest results are sold off-market — speak with him directly for the full picture.</p>
-      </div>
-      <div class="card-grid">
-        ${renderSaleCards(RECENT_SALES.slice(0, 6))}
-      </div>
-      <p class="text-center"><a class="btn btn-ghost" href="/recent-sales/">View all recent sales</a></p>
-    </div>
-  </section>
-
-  <section class="section section-cta">
-    <div class="container two-col">
-      <div>
-        <p class="eyebrow">Free appraisal</p>
-        <h2 class="display">What is your home worth in today’s market?</h2>
-        <p>Get a confidential, obligation-free market appraisal from the Lower North Shore’s most recommended agent. We’ll review recent comparable sales, current buyer demand, and the right campaign strategy for your home.</p>
-        <ul class="check-list">
-          <li>Confidential and obligation-free</li>
-          <li>Evidence-led pricing using recent comparables</li>
-          <li>A tailored go-to-market plan, public, hybrid or off-market</li>
-        </ul>
-      </div>
-      <div class="form-card">${appraisalForm()}</div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <div class="section-head">
-        <p class="eyebrow">Testimonials</p>
-        <h2 class="display">In their own words.</h2>
-        <p class="lede">Verified reviews from vendors and buyers across the Lower North Shore.</p>
-      </div>
-      <blockquote class="big-quote">
-        <p>“Alex was nothing short of efficient, knowledgeable and professional throughout the process of us buying an apartment in Lane Cove North. He clearly works with integrity and we appreciated his straight talking approach.”</p>
-        <cite>Jenny · Buyer · Lane Cove North</cite>
-      </blockquote>
-      <p class="text-center"><a class="btn btn-ghost" href="${GOOGLE_REVIEWS_URL}" target="_blank" rel="noopener">Read all reviews on Google</a></p>
-    </div>
-  </section>
-
-  <section class="section section-tinted">
-    <div class="container">
-      <div class="section-head">
-        <p class="eyebrow">Recognition</p>
-        <h2 class="display">Consistently ranked among Australia’s best.</h2>
-      </div>
-      <div class="badge-grid">
-        <div class="badge"><strong>Top performer</strong><span>Raine &amp; Horne national network</span></div>
-        <div class="badge"><strong>Most recommended</strong><span>Lane Cove on realestate.com.au</span></div>
-        <div class="badge"><strong>Multiple records</strong><span>Block, street and suburb across the LNS</span></div>
-        <div class="badge"><strong>Since 2009</strong><span>Continuous representation on the LNS</span></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section section-final">
-    <div class="container text-center">
-      <p class="eyebrow">Ready when you are</p>
-      <h2 class="display">Twelve months out, or just curious.</h2>
-      <p class="lede">Whether you’re weighing a sale or simply want a credible figure on your home, Alex would be glad to share his perspective.</p>
-      <div class="hero-ctas center">
-        <a class="btn btn-primary" href="/appraisal/">Request a free appraisal</a>
-        <a class="btn btn-ghost" href="${PHONE_HREF}">Call ${PHONE}</a>
-      </div>
-    </div>
-  </section>
-</main>
-${realEstateAgentSchema}
-${breadcrumbs([{name:'Home',url:'/'}])}
-` + footer();
-
-// ===== HUB =====
-const hubHTML = baseHead(
-  'Lower North Shore Real Estate — Suburb Guides &amp; Free Appraisals | Alex Banning',
-  'Suburb-by-suburb Lower North Shore guides from Alex Banning, the area’s most recommended agent. Median prices, recent sales and a free market appraisal in your suburb.',
-  '/lower-north-shore/'
-) + nav() + `
-<main>
-  <section class="hero hero-sub">
-    <div class="container hero-inner">
-      <p class="eyebrow">Lower North Shore</p>
-      <h1>Suburb guides &amp; free market appraisals.</h1>
-      <p class="lede">Twenty-nine suburbs, one agent. Alex Banning has sold across the Lower North Shore since 2009 — from harbour-front Mosman to federation-rich Roseville. Choose your suburb below.</p>
-    </div>
-  </section>
-  <section class="section">
-    <div class="container">
-      <div class="suburb-grid large">
-        ${SUBURBS.map(s => `<a class="suburb-tile" href="/lower-north-shore/${s.slug}/">
-          <span class="suburb-tile-name">${s.name}</span>
-          <span class="suburb-tile-meta">${s.postcode}</span>
-          <span class="suburb-tile-hook">${s.hook}</span>
-        </a>`).join('')}
-      </div>
-    </div>
-  </section>
-  <section class="section section-cta">
-    <div class="container two-col">
-      <div>
-        <p class="eyebrow">Free appraisal</p>
-        <h2 class="display">Not sure which suburb fits your campaign?</h2>
-        <p>If your property sits on a boundary or you own across multiple LNS suburbs, Alex will provide a tailored, evidence-led view across each market.</p>
-      </div>
-      <div class="form-card">${appraisalForm()}</div>
-    </div>
-  </section>
-</main>
-${realEstateAgentSchema}
-${breadcrumbs([{name:'Home',url:'/'},{name:'Lower North Shore',url:'/lower-north-shore/'}])}
-` + footer();
-
-// ===== ABOUT =====
-const aboutHTML = baseHead(
-  'About Alex Banning | Director, Raine &amp; Horne Lower North Shore',
-  'Director of Raine &amp; Horne Lower North Shore, holding block, street and suburb records since 2009. The most recommended agent in Lane Cove on realestate.com.au.',
-  '/about/'
-) + nav() + `
-<main>
-  <section class="hero hero-sub hero-split">
-    <div class="container hero-split-inner">
-      <div class="hero-copy">
-        <p class="eyebrow">About</p>
-        <h1>Alex Banning.</h1>
-        <p class="lede">Partner Agent and Director of Raine &amp; Horne Lower North Shore. Setting the benchmark across Sydney’s Lower North Shore since 2009.</p>
-      </div>
-      <div class="hero-portrait">
-        <img src="/alex-banning-about.jpeg" alt="Alex Banning, Director — Raine &amp; Horne Lower North Shore" loading="eager">
-      </div>
-    </div>
-  </section>
-  <section class="section">
-    <div class="container narrow prose">
-      <p>Alex Banning has spent more than fifteen years selling Lower North Shore homes. As a Director of Raine &amp; Horne Lower North Shore — and Director of Banning Enterprises Pty Ltd — he is one of the network’s most consistent top performers and the holder of multiple block, street and suburb records.</p>
-      <h2>Philosophy</h2>
-      <p>The market rewards judgement, preparation and discipline — not noise. Alex’s campaigns are calibrated to the property and its likely audience, not a one-size-fits-all formula. Whether the right answer is a public auction, a private treaty or a fully off-market campaign, the recommendation is always evidence-led and unflinchingly honest.</p>
-      <h2>Track record</h2>
-      <ul class="check-list">
-        <li>Selling on the Lower North Shore continuously since 2009</li>
-        <li>Block, street and suburb records held across the area</li>
-        <li>Most recommended agent in Lane Cove on realestate.com.au</li>
-        <li>Consistent top performer within the Raine &amp; Horne national network</li>
-      </ul>
-      <h2>Coverage</h2>
-      <p>Alex sells across all twenty-nine Lower North Shore suburbs, with offices at Lane Cove, Willoughby, Mosman and Northbridge. From harbour-front houses in Longueville and Mosman to Art Deco apartments in Cremorne and federation cottages in Naremburn, the work is the same: prepare thoroughly, price honestly, and present the home to the buyers most likely to compete for it.</p>
-      <h2>How to engage</h2>
-      <p>The most informed first step is a confidential conversation. Call <a href="${PHONE_HREF}">${PHONE}</a>, email <a href="mailto:${EMAIL}">${EMAIL}</a>, or <a href="/appraisal/">request a free market appraisal</a>.</p>
-    </div>
-  </section>
-  <section class="section section-final">
-    <div class="container text-center">
-      <h2 class="display">Begin a conversation.</h2>
-      <div class="hero-ctas center">
-        <a class="btn btn-primary" href="/appraisal/">Request a free appraisal</a>
-        <a class="btn btn-ghost" href="${PHONE_HREF}">Call ${PHONE}</a>
-      </div>
-    </div>
-  </section>
-</main>
-${realEstateAgentSchema}
-${breadcrumbs([{name:'Home',url:'/'},{name:'About',url:'/about/'}])}
-` + footer();
-
-// ===== APPRAISAL =====
-const appraisalHTML = baseHead(
-  'Free Market Appraisal | Alex Banning — Lower North Shore',
-  'Confidential, obligation-free market appraisal from the Lower North Shore’s most recommended agent. Evidence-led pricing and a tailored campaign plan.',
-  '/appraisal/'
-) + nav() + `
-<main>
-  <section class="hero hero-sub">
-    <div class="container hero-inner">
-      <p class="eyebrow">Free appraisal</p>
-      <h1>What is your home worth in today’s market?</h1>
-      <p class="lede">Confidential, obligation-free, evidence-led. Twenty–thirty minutes on site, a written appraisal within two business days.</p>
-    </div>
-  </section>
-  <section class="section">
-    <div class="container two-col">
-      <div class="prose">
-        <h2>How it works</h2>
-        <ol class="steps">
-          <li><strong>Book a time.</strong> By phone, email or the form alongside.</li>
-          <li><strong>On-site visit.</strong> Alex inspects your home in person, usually within 48 hours.</li>
-          <li><strong>Comparable analysis.</strong> Recent local sales, current buyer demand and likely campaign strategy.</li>
-          <li><strong>Written appraisal.</strong> A confidential price guide and tailored go-to-market plan.</li>
-        </ol>
-        <h2>Why vendors choose Alex</h2>
-        <ul class="check-list">
-          <li>Records held in block, street and suburb across the LNS</li>
-          <li>Active database of qualified Lower North Shore buyers</li>
-          <li>Five-star reviews from vendors and buyers alike</li>
-          <li>Discreet pre-market and off-market reach where required</li>
-        </ul>
-      </div>
-      <div class="form-card sticky">${appraisalForm()}</div>
-    </div>
-  </section>
-</main>
-${realEstateAgentSchema}
-${breadcrumbs([{name:'Home',url:'/'},{name:'Free Appraisal',url:'/appraisal/'}])}
-` + footer();
-
-// ===== CONTACT =====
-const contactHTML = baseHead(
-  'Contact Alex Banning | Raine &amp; Horne Lower North Shore',
-  'Speak directly with Alex Banning. Phone, email and four office addresses across the Lower North Shore.',
-  '/contact/'
-) + nav() + `
-<main>
-  <section class="hero hero-sub hero-split">
-    <div class="container hero-split-inner">
-      <div class="hero-copy">
-        <p class="eyebrow">Contact</p>
-        <h1>Speak with Alex.</h1>
-        <p class="lede">Direct line, direct email, and four offices across the Lower North Shore.</p>
-      </div>
-      <div class="hero-badge">
-        <img src="/no1-chairmans-club.jpeg" alt="Alex Banning — #1 Chairman's Club Salespeople, Residential &amp; Rural Gold" loading="eager">
-      </div>
-    </div>
-  </section>
-  <section class="section">
-    <div class="container narrow prose">
-      <h2>Direct</h2>
-      <p><strong>Phone:</strong> <a href="${PHONE_HREF}">${PHONE}</a><br><strong>Email:</strong> <a href="mailto:${EMAIL}">${EMAIL}</a></p>
-      <h2>Offices</h2>
-      <div class="office-grid">
-        ${OFFICES.map(o => `<div class="office-card"><h3>${o.name}</h3><p>${o.addr}</p></div>`).join('')}
-      </div>
-      <p class="muted">For an obligation-free appraisal, the fastest route is the <a href="/appraisal/">appraisal request form</a>.</p>
-    </div>
-  </section>
-</main>
-${realEstateAgentSchema}
-${breadcrumbs([{name:'Home',url:'/'},{name:'Contact',url:'/contact/'}])}
-` + footer();
-
-// ===== RECENT SALES =====
-const salesHTML = baseHead(
-  'Recent Sales | Alex Banning — Lower North Shore',
-  'A selection of recent record sales by Alex Banning across the Lower North Shore. Many of the strongest results are sold off-market.',
-  '/recent-sales/'
-) + nav() + `
-<main>
-  <section class="hero hero-sub hero-split">
-    <div class="container hero-split-inner">
-      <div class="hero-copy">
-        <p class="eyebrow">Recent sales</p>
-        <h1>Results that re-set the benchmark.</h1>
-        <p class="lede">A small selection of recent campaigns. Many of Alex’s strongest results are off-market — speak with him directly for the full picture.</p>
-      </div>
-      <div class="hero-badge">
-        <img src="/no1-chairmans-club.jpeg" alt="Alex Banning — #1 Chairman's Club Salespeople, Residential &amp; Rural Gold" loading="eager">
-      </div>
-    </div>
-  </section>
-  <section class="section">
-    <div class="container">
-      <div class="card-grid">
-        ${renderSaleCards(RECENT_SALES)}
-      </div>
-      <p class="text-center muted small">Selected recent campaigns. For Alex’s full sales portfolio across the Lower North Shore, see his <a href="https://www.raineandhorne.com.au/lns/team/alex-banning-residential" target="_blank" rel="noopener">Raine &amp; Horne profile</a>.</p>
-    </div>
-  </section>
-  <section class="section section-final">
-    <div class="container text-center">
-      <h2 class="display">Curious about your home’s ceiling?</h2>
-      <a class="btn btn-primary" href="/appraisal/">Request a free appraisal</a>
-    </div>
-  </section>
-</main>
-${breadcrumbs([{name:'Home',url:'/'},{name:'Recent Sales',url:'/recent-sales/'}])}
-` + footer();
-
-// ===== TESTIMONIALS =====
-const testimonialsHTML = baseHead(
-  'Testimonials | Alex Banning — Lower North Shore',
-  'Verified Google reviews from vendors and buyers who have worked with Alex Banning across the Lower North Shore.',
-  '/testimonials/'
-) + nav() + `
-<main>
-  <section class="hero hero-sub hero-split">
-    <div class="container hero-split-inner">
-      <div class="hero-copy">
-        <p class="eyebrow">Testimonials</p>
-        <h1>What clients say.</h1>
-        <p class="lede">Every review of Alex’s work is verified and lives on his Google Business Profile. Read them all, in full, with star ratings.</p>
-        <div class="hero-ctas">
-          <a class="btn btn-primary" href="${GOOGLE_REVIEWS_URL}" target="_blank" rel="noopener">Read all reviews on Google</a>
-        </div>
-      </div>
-      <div class="hero-portrait">
-        <img src="/alex-banning-testimonials.jpeg" alt="Alex Banning — verified five-star reviews on Google" loading="eager">
-      </div>
-    </div>
-  </section>
-  <section class="section">
-    <div class="container narrow">
-      <p class="eyebrow text-center">A recent review</p>
-      <blockquote class="big-quote">
-        <p>“Alex was nothing short of efficient, knowledgeable and professional throughout the process of us buying an apartment in Lane Cove North. He clearly works with integrity and we appreciated his straight talking approach.”</p>
-        <cite>Jenny · Buyer · Lane Cove North</cite>
-      </blockquote>
-      <p class="text-center muted">For the full set — including verified five-star reviews from vendors across Lane Cove, Mosman, Northbridge, Cremorne, Willoughby and beyond — visit Alex’s Google Business Profile.</p>
-      <p class="text-center"><a class="btn btn-primary" href="${GOOGLE_REVIEWS_URL}" target="_blank" rel="noopener">Read all reviews on Google</a></p>
-    </div>
-  </section>
-  <section class="section section-final">
-    <div class="container text-center">
-      <h2 class="display">Considering selling? Talk to Alex.</h2>
-      <div class="hero-ctas center">
-        <a class="btn btn-primary" href="/appraisal/">Request a free appraisal</a>
-        <a class="btn btn-ghost" href="${PHONE_HREF}">Call ${PHONE}</a>
-      </div>
-    </div>
-  </section>
-</main>
-${breadcrumbs([{name:'Home',url:'/'},{name:'Testimonials',url:'/testimonials/'}])}
-` + footer();
-
-// ===== THANK YOU =====
-const thankyouHTML = baseHead(
-  'Thank you | Alex Banning',
-  'Your appraisal request has been received. Alex will be in touch shortly.',
-  '/thank-you/'
-) + nav() + `
-<main>
-  <section class="hero hero-sub">
-    <div class="container hero-inner text-center">
-      <p class="eyebrow">Thank you</p>
-      <h1>Your request has been received.</h1>
-      <p class="lede">Alex will personally be in touch within one business day to confirm a time. For anything urgent, call <a href="${PHONE_HREF}">${PHONE}</a>.</p>
-      <div class="hero-ctas center">
-        <a class="btn btn-primary" href="/recent-sales/">View recent sales</a>
-        <a class="btn btn-ghost" href="/lower-north-shore/">Browse suburbs</a>
-      </div>
-    </div>
-  </section>
-</main>
-` + footer();
-
-// ===== PRIVACY / TERMS =====
-const privacyHTML = baseHead('Privacy Policy | Alex Banning','Privacy policy for alexbanning.com.au.','/privacy/') + nav() + `
-<main><section class="section"><div class="container narrow prose">
-<h1>Privacy Policy</h1>
-<p>This site is operated by Banning Enterprises Pty Ltd, trading as Raine &amp; Horne Lower North Shore. Personal information you provide via this website (including the appraisal request form) is collected, held and used in accordance with the Australian Privacy Principles under the Privacy Act 1988 (Cth).</p>
-<h2>What we collect</h2>
-<p>Name, contact details, property address and any other information you choose to provide.</p>
-<h2>How we use it</h2>
-<p>To prepare and deliver your market appraisal, to contact you about your enquiry, and to provide ongoing real estate services where you have requested them.</p>
-<h2>Disclosure</h2>
-<p>We do not sell your information. We may share it with our office network where required to deliver the service you requested.</p>
-<h2>Contact</h2>
-<p>For any privacy enquiry, email <a href="mailto:${EMAIL}">${EMAIL}</a>.</p>
-</div></section></main>
-` + footer();
-
-const termsHTML = baseHead('Terms of Use | Alex Banning','Terms of use for alexbanning.com.au.','/terms/') + nav() + `
-<main><section class="section"><div class="container narrow prose">
-<h1>Terms of Use</h1>
-<p>The information on this website is provided in good faith and for general information only. Market data, medians and indicative figures are sourced from third parties (including CoreLogic and Domain) and may be out of date. Nothing on this site constitutes financial, legal or investment advice.</p>
-<p>For figures specific to your property, request a tailored market appraisal.</p>
-</div></section></main>
-` + footer();
-
-// ===== SUBURB PAGES =====
-function suburbHTML(s) {
-  const isPrestige = ['mosman','kirribilli','greenwich','riverview','longueville','linley-point','castlecrag','castle-cove','lavender-bay'].includes(s.slug);
-  const ctaLabel = isPrestige ? 'Request a private appraisal' : `Request my ${s.name} appraisal`;
-  const heroH1 = isPrestige
-    ? `Selling in ${s.name}? Request a private market appraisal.`
-    : `Selling in ${s.name}? Get a free market appraisal.`;
-  const intro = `<p>Alex Banning has sold throughout ${s.name} for over fifteen years — across ${s.specialty}. His campaigns work the streets you would expect: ${s.streets}. ${s.hook}</p>
-  <p>In a market where buyers compete for limited stock, Alex’s curated database, off-market reach and disciplined campaign strategy have repeatedly produced record prices. If you are considering selling in ${s.name}, a confidential conversation with Alex is the most informed first step.</p>`;
-
-  const faqs = [
-    {q:`How much is my ${s.name} home worth?`, a:`The honest answer is that it depends on the street, aspect, condition and the buyer pool active for that property type. Alex provides a precise, evidence-based figure after a short on-site visit, drawing on recent comparable ${s.name} sales — including off-market transactions that don’t appear on the major portals.`},
-    {q:`Is the appraisal really free?`, a:`Yes. Alex’s market appraisals are complimentary and obligation-free, whether you are twelve months from selling or simply curious about your home’s ceiling.`},
-    {q:`What’s the difference between a market appraisal and a bank valuation?`, a:`A market appraisal is the price an experienced local agent expects your home to achieve in the current market. A bank valuation is a more conservative figure used by lenders for mortgage security. The two are rarely the same number, and serve different purposes.`},
-    {q:`How long does an appraisal take?`, a:`The on-site visit usually takes 20–30 minutes. You’ll typically receive a written appraisal within two business days.`},
-    {q:`Can my ${s.name} home be sold off-market?`, a:`Yes — and in many cases it should be. A meaningful share of ${s.name}’s strongest results are achieved through pre-market and off-market campaigns to a curated buyer database. Alex will advise honestly on whether public, hybrid or off-market is most likely to deliver your strongest result.`},
-    {q:`How should I prepare my ${s.name} home for sale?`, a:`Alex provides a tailored pre-market plan covering styling, minor works, photography and timing — calibrated to your home’s likely audience and price point. There is rarely a one-size-fits-all answer.`},
-  ];
-
-  const faqSchema = `<script type="application/ld+json">${JSON.stringify({
-    "@context":"https://schema.org",
-    "@type":"FAQPage",
-    "mainEntity":faqs.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))
-  })}<\/script>`;
-
-  const placeSchema = `<script type="application/ld+json">${JSON.stringify({
-    "@context":"https://schema.org","@type":"Place","name":`${s.name}, NSW ${s.postcode}`,"address":{"@type":"PostalAddress","addressLocality":s.name,"postalCode":s.postcode,"addressRegion":"NSW","addressCountry":"AU"}
-  })}<\/script>`;
-
-  const metaTitle = `${s.name} Real Estate Agent | Free Appraisal — Alex Banning`;
-  const metaDesc = `Selling in ${s.name}? Alex Banning, the Lower North Shore’s most recommended agent, delivers record prices. Request your free, confidential market appraisal.`;
-
-  return baseHead(metaTitle, metaDesc, `/lower-north-shore/${s.slug}/`) + nav() + `
-<main>
-  <section class="hero hero-suburb hero-split">
-    <div class="container hero-split-inner">
-      <div class="hero-copy">
-        <p class="eyebrow">${s.name} · ${s.postcode}</p>
-        <h1>${heroH1}</h1>
-        <p class="lede">${s.hook}</p>
-        <div class="hero-ctas">
-          <a class="btn btn-primary" href="#appraise">${ctaLabel}</a>
-          <a class="btn btn-ghost" href="${PHONE_HREF}">Call ${PHONE}</a>
-        </div>
-      </div>
-      <div class="hero-badge">
-        <img src="/no1-chairmans-club.jpeg" alt="Alex Banning — #1 Chairman's Club Salespeople, Residential &amp; Rural Gold, Raine &amp; Horne Lower North Shore" loading="eager">
-      </div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container narrow prose">
-      <h2 class="display">${s.name} — by reputation and by results.</h2>
-      ${intro}
-    </div>
-  </section>
-
-  <section class="section section-tinted">
-    <div class="container narrow prose">
-      <p class="eyebrow">About the suburb</p>
-      <h2 class="display">Inside ${s.name}.</h2>
-      <p>${s.profile}</p>
-      <p class="muted small">For the latest ${s.name} median house and unit prices, days on market and 12-month growth — alongside Alex’s view on current buyer demand — request a tailored market update below. Figures are reviewed each quarter against CoreLogic and Domain data.</p>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <div class="section-head"><p class="eyebrow">Why Alex</p><h2 class="display">A measured approach to ${s.name}.</h2></div>
-      <div class="why-grid">
-        <div class="why-card"><h3>Record-setting results</h3><p>Block, street and suburb records held across the Lower North Shore in both apartment and house markets.</p></div>
-        <div class="why-card"><h3>Deep local knowledge</h3><p>Selling in ${s.name} since 2009 — Alex knows which buyers are active, what they will pay, and why.</p></div>
-        <div class="why-card"><h3>Five-star service</h3><p>Most recommended agent in Lower North Shore on realestate.com.au, with reviews from across the area.</p></div>
-        <div class="why-card"><h3>Off-market reach</h3><p>A private database of qualified buyers, often producing strong sales before the campaign begins.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section section-tinted">
-    <div class="container narrow prose">
-      <h2 class="display">How a ${s.name} market appraisal works.</h2>
-      <ol class="steps">
-        <li><strong>Book a time.</strong> By phone, email or through the form below.</li>
-        <li><strong>On-site visit.</strong> Alex inspects your home in person, usually within 48 hours.</li>
-        <li><strong>Comparable analysis.</strong> Recent ${s.name} sales, current buyer demand, and the right campaign strategy.</li>
-        <li><strong>Written appraisal.</strong> A confidential price guide and tailored go-to-market plan.</li>
-      </ol>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container narrow">
-      <div class="section-head"><p class="eyebrow">FAQs</p><h2 class="display">${s.name} appraisal questions.</h2></div>
-      <div class="faq-list">
-        ${faqs.map(f => `<details><summary>${f.q}</summary><p>${f.a}</p></details>`).join('')}
-      </div>
-    </div>
-  </section>
-
-  <section class="section section-cta" id="appraise">
-    <div class="container two-col">
-      <div>
-        <p class="eyebrow">Free appraisal</p>
-        <h2 class="display">${s.name} deserves ${s.name}’s leading agent.</h2>
-        <p>Request your confidential, obligation-free ${s.name} market appraisal from Alex Banning.</p>
-      </div>
-      <div class="form-card">${appraisalForm(s.name)}</div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container">
-      <div class="section-head"><p class="eyebrow">Neighbouring suburbs</p><h2 class="display">Explore the Lower North Shore.</h2></div>
-      <div class="suburb-grid">
-        ${s.neighbours.map(n => `<a class="suburb-tile small" href="/lower-north-shore/${n}/"><span class="suburb-tile-name">${slugToName[n]}</span></a>`).join('')}
-        <a class="suburb-tile small" href="/lower-north-shore/"><span class="suburb-tile-name">All suburbs →</span></a>
-      </div>
-    </div>
-  </section>
-</main>
-${realEstateAgentSchema}
-${placeSchema}
-${faqSchema}
-${breadcrumbs([{name:'Home',url:'/'},{name:'Lower North Shore',url:'/lower-north-shore/'},{name:s.name,url:`/lower-north-shore/${s.slug}/`}])}
-` + footer();
-}
-
-// ===== WRITE FILES =====
-function ensureDir(p) { fs.mkdirSync(p, { recursive: true }); }
-function write(p, content) {
-  ensureDir(path.dirname(p));
-  fs.writeFileSync(p, content);
-}
-
-const out = path.resolve(__dirname);
-
-write(path.join(out, 'index.html'), homeHTML);
-write(path.join(out, 'about/index.html'), aboutHTML);
-write(path.join(out, 'appraisal/index.html'), appraisalHTML);
-write(path.join(out, 'contact/index.html'), contactHTML);
-write(path.join(out, 'recent-sales/index.html'), salesHTML);
-write(path.join(out, 'testimonials/index.html'), testimonialsHTML);
-write(path.join(out, 'thank-you/index.html'), thankyouHTML);
-write(path.join(out, 'privacy/index.html'), privacyHTML);
-write(path.join(out, 'terms/index.html'), termsHTML);
-write(path.join(out, 'lower-north-shore/index.html'), hubHTML);
-
-SUBURBS.forEach(s => {
-  write(path.join(out, `lower-north-shore/${s.slug}/index.html`), suburbHTML(s));
+const readDir = dir => fs.readdirSync(path.join(U.ROOT, dir)).filter(f => f.endsWith('.md')).map(f => {
+  const { data, body } = frontmatter(fs.readFileSync(path.join(U.ROOT, dir, f), 'utf8'));
+  return { ...data, body };
 });
+const suburbs = readDir('data/suburbs').sort((a, b) => Number(a.order) - Number(b.order));
+const suburbBySlug = Object.fromEntries(suburbs.map(s => [s.slug, s]));
+const insights = readDir('data/insights');
 
-// sitemap
-const urls = [
-  '/', '/about/', '/appraisal/', '/contact/', '/recent-sales/', '/testimonials/',
-  '/lower-north-shore/', '/privacy/', '/terms/',
-  ...SUBURBS.map(s => `/lower-north-shore/${s.slug}/`)
-];
-const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+const hawthorne = saleById['10-hawthorne-avenue-chatswood'];
+const sharland = listings.find(l => l.id === '42-sharland-avenue-chatswood');
+const agentSchema = (withRating = false) => personSchema({ withRating, stats, awards: awards.awards.filter(a => !a.agency), areaServed: suburbs.map(s => s.name) });
+
+// ---------- Output helpers ----------
+const pages = [];
+function write(urlPath, html, { sitemap = true, priority = '0.6' } = {}) {
+  const file = urlPath.endsWith('/') ? path.join(OUT, urlPath, 'index.html') : path.join(OUT, urlPath);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, html);
+  if (sitemap) pages.push({ urlPath, priority });
+}
+function copyDir(from, to) {
+  fs.mkdirSync(to, { recursive: true });
+  for (const e of fs.readdirSync(from, { withFileTypes: true })) {
+    const a = path.join(from, e.name), b = path.join(to, e.name);
+    e.isDirectory() ? copyDir(a, b) : fs.copyFileSync(a, b);
+  }
+}
+
+const statNote = text => `<p class="src">${esc(text)}</p>`;
+const arrowLink = (label, href, cls = 'more') => `<a class="${cls}" href="${href}">${label} ${ICON.arrow}</a>`;
+
+// =====================================================================
+// HOME
+// =====================================================================
+function home() {
+  const heroIds = hawthorne.images.filter(hasImage).slice(0, 4);
+  const hasHero = heroIds.length > 0;
+  const heroMedia = hasHero
+    ? `<div class="hero__slides" data-slides>${heroIds.map((id, i) => `<div class="hero__slide${i === 0 ? ' is-active' : ''}">${pic(id, { eager: i === 0, sizes: '100vw', alt: i === 0 ? U.REG_BY_ID[id].alt : '' })}</div>`).join('')}</div>`
+    : `<div class="hero__portrait">${pic('alex-phone', { eager: true, sizes: '(min-width: 900px) 40vw, 100vw' })}</div>`;
+
+  const signatureImg = hawthorne.images.find(hasImage) || hawthorne.images[0];
+  const sharlandImg = sharland && (sharland.images.find(hasImage) || sharland.images[0]);
+  const floor = salesData.homepagePriceFloor;
+  const gallerySales = ['2-34-tobruk-avenue-cremorne', 'g09-28-mindarie-street-lane-cove', '205-15-finlayson-street-lane-cove', '2-6-parklands-avenue-lane-cove', '204-76-82-gordon-crescent-lane-cove']
+    .map(id => saleById[id]).filter(Boolean);
+  const strip = ['chatswood-west', 'longueville', 'northbridge', 'castlecrag', 'mosman', 'cremorne', 'greenwich', 'lane-cove'].map(s => suburbBySlug[s]).filter(Boolean);
+
+  const body = `
+<section class="hero${hasHero ? ' hero--full' : ' hero--split'}" aria-labelledby="hero-h">
+  ${heroMedia}
+  <div class="hero__veil" aria-hidden="true"></div>
+  <div class="wrap hero__content">
+    <p class="label label--light">Raine &amp; Horne Lower North Shore · Partner Agent</p>
+    <h1 id="hero-h" class="hero__title">The Lower North Shore's most recommended agent.</h1>
+    <p class="hero__sub">Seventeen years. Street and suburb records. Now representing the area's finest homes.</p>
+    <div class="hero__ctas">
+      <a class="btn btn--light" href="/appraisal/">Request a private appraisal</a>
+      <a class="btn btn--line-light" href="#signature">View signature sales</a>
+    </div>
+    ${hasHero ? `<p class="hero__caption">10 Hawthorne Avenue, Chatswood. Sold $4,025,000.</p>` : ''}
+  </div>
+</section>
+
+${C.proofBand(stats)}
+
+<section class="section signature" id="signature" aria-labelledby="sig-h">
+  <div class="wrap signature__grid">
+    <div class="signature__media" data-reveal>
+      ${pic(signatureImg, { sizes: '(min-width: 900px) 58vw, 100vw', ratio: '4/5', alt: 'Pool and garden at 10 Hawthorne Avenue, Chatswood, sold by Alex Banning' })}
+    </div>
+    <div class="signature__copy" data-reveal>
+      <p class="label">Signature sale · Chatswood West</p>
+      <h2 id="sig-h" class="display">10 Hawthorne Avenue</h2>
+      <p class="figure">$4,025,000</p>
+      <p class="lede">Held by one family for four decades. A corner estate with a saltwater pool and helical staircase, taken to auction and sold.</p>
+      <dl class="kv">
+        <div><dt>Method</dt><dd>Auction</dd></div>
+        <div><dt>Date</dt><dd>14 February 2026</dd></div>
+        <div><dt>Home</dt><dd>Four bedrooms, double brick, studio</dd></div>
+      </dl>
+      ${arrowLink('Read the case study', '/results/10-hawthorne-avenue-chatswood/')}
+    </div>
+  </div>
+</section>
+
+${sharland ? `<section class="section private" aria-labelledby="pc-h">
+  <div class="wrap private__grid">
+    <div class="private__copy" data-reveal>
+      <p class="label label--light">Private Collection</p>
+      <h2 id="pc-h" class="display">42 Sharland Avenue, Chatswood</h2>
+      <p class="lede">Four bedrooms, three bathrooms and a pool. Available off market to registered buyers.</p>
+      <p>Some homes are better sold quietly. The Private Collection is offered first to buyers on Alex's register, before and sometimes instead of the portals.</p>
+      ${arrowLink('Enter the Private Collection', '/private-collection/', 'more more--light')}
+    </div>
+    <div class="private__media" data-reveal>
+      <div class="veiled">${pic(sharlandImg, { sizes: '(min-width: 900px) 45vw, 100vw', ratio: '4/5', alt: 'A glimpse of the pool at 42 Sharland Avenue, Chatswood, offered off market' })}</div>
+    </div>
+    <div class="private__form" data-reveal>
+      <h3 class="h3">Join the private buyer register</h3>
+      <p class="muted">Hear about Private Collection homes before they are advertised, if they are advertised at all.</p>
+      ${C.registerForm()}
+    </div>
+  </div>
+</section>` : ''}
+
+<section class="section approach" aria-labelledby="ap-h">
+  <div class="wrap">
+    ${C.sectionHead({ label: 'The approach', id: 'ap-h', title: 'Preparation, judgement, and a steadfast commitment to the result.', intro: 'Real estate at the top of the market is rarely about the loudest voice in the room.' })}
+    <div class="approach__grid">
+      <article data-reveal><p class="num">I</p><h3 class="h3">Preparation</h3><p>Pre-market strategy set before a photograph is taken. Styling, trades and presentation managed to a timeline, so the home launches once and launches well.</p></article>
+      <article data-reveal><p class="num">II</p><h3 class="h3">Judgement</h3><p>Honest pricing advice, and a clear recommendation on method: auction, private treaty or a private, off-market campaign. The right answer depends on the home, not habit.</p></article>
+      <article data-reveal><p class="num">III</p><h3 class="h3">Reach</h3><p>Lane Cove's deepest buyer database, built across ${stats.rea.sold} sales a year. ${stats.domain.sold} sales and ${stats.domain.totalValue} in twelve months means active, qualified buyers already in conversation. That is what a prestige home needs.</p>${statNote(`${stats.rea.source} and ${stats.domain.source}, ${stats.rea.period}`)}</article>
+    </div>
+  </div>
+</section>
+
+<section class="section results-band" aria-labelledby="rs-h">
+  <div class="wrap">
+    ${C.sectionHead({ label: 'Results', id: 'rs-h', title: 'Recent results.', link: ['View all results', '/results/'] })}
+  </div>
+  ${C.carousel(gallerySales.map(s => C.saleCard(s, { showPrice: s.price >= floor })), 'Recent results')}
+</section>
+
+<section class="section reviews-band" aria-labelledby="rv-h">
+  <div class="wrap reviews-band__inner">
+    <h2 id="rv-h" class="label">In their words</h2>
+    ${C.quoteRotator(reviews.quotes, stats)}
+    ${arrowLink('Read more reviews', '/reviews/')}
+  </div>
+</section>
+
+<section class="section suburbs-strip" aria-labelledby="sb-h">
+  <div class="wrap">
+    ${C.sectionHead({ label: 'Suburbs', id: 'sb-h', title: 'Across the Lower North Shore.', link: ['All suburb guides', '/suburbs/'] })}
+    <ul class="strip" role="list">
+      ${strip.map((s, i) => `<li data-reveal><a href="/suburbs/${s.slug}/"><span class="strip__n">${String(i + 1).padStart(2, '0')}</span><span class="strip__name">${esc(s.name)}</span><span class="strip__stock">${esc(s.stock)}</span></a></li>`).join('')}
+    </ul>
+  </div>
+</section>
+
+${C.awardsMarquee(awards)}
+
+${C.aboutFacts(stats, awards)}
+
+${C.closingCta()}
+`;
+  write('/', page({
+    path: '/',
+    title: 'Alex Banning | Prestige & Lower North Shore Real Estate Agent',
+    description: `Record-setting Raine & Horne Partner Agent. $60M+ sold in 12 months, ${stats.reviews.ratemyagent.count} verified reviews. Request a private appraisal.`,
+    overlay: true,
+    preload: hasHero ? preloadFor(heroIds[0], '100vw') : preloadFor('alex-phone', '(min-width: 900px) 40vw, 100vw'),
+    jsonld: [agentSchema(true), { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Alex Banning', url: abs('/') }],
+    body,
+  }), { priority: '1.0' });
+}
+
+// =====================================================================
+// PRIVATE COLLECTION
+// =====================================================================
+function privateCollection() {
+  const items = privateListings.map(l => {
+    const lead = l.images.find(hasImage) || l.images[0];
+    const gallery = l.images.filter(hasImage).slice(1, 7);
+    return `<article class="pc-item" id="${l.id}" data-gated="${l.id}">
+      <div class="pc-item__media">${lead || l.images.length ? `<div class="veiled">${pic(lead, { sizes: '(min-width: 900px) 55vw, 100vw', ratio: '4/5', alt: `${l.suburb} home offered off market by Alex Banning` })}</div>` : `<div class="img ph" style="aspect-ratio:4/5" role="img" aria-label="Off-market home in ${esc(l.suburb)}"><span>Details on request</span></div>`}</div>
+      <div class="pc-item__copy">
+        <p class="label">${esc(l.method)} · ${esc(l.suburb)}</p>
+        <h2 class="display">${esc(l.suburb)} ${esc((l.type || 'home').toLowerCase())}</h2>
+        <p class="lede">${esc(l.teaser || '')}</p>
+        <p class="card__meta">${esc([l.type, C.specs(l)].filter(Boolean).join(' · '))}</p>
+        <div class="gate" data-gate>
+          <p class="muted">Leave your name and mobile to see the address, the full gallery and inspection options. Alex will call to confirm.</p>
+          ${C.gateForm(l.id)}
+        </div>
+        <div class="gated" data-gated-content hidden>
+          <p class="label">Address</p>
+          <p class="h3">${esc(l.address)}, ${esc(l.suburb)}</p>
+          <p>${esc(l.priceLabel)}. Private inspections by appointment with Alex on <a href="${SITE.phoneHref}">${SITE.phone}</a>.</p>
+          ${gallery.length ? `<div class="gallery">${gallery.map(id => pic(id, { sizes: '(min-width: 900px) 20vw, 45vw', ratio: '1/1' })).join('')}</div>` : ''}
+        </div>
+      </div>
+    </article>`;
+  }).join('');
+
+  const body = `
+<section class="phero">
+  <div class="wrap phero__inner">
+    <p class="label">Private Collection</p>
+    <h1 class="display display--xl">Not every home should be on a portal.</h1>
+    <p class="lede">Off-market and pre-market homes, offered first to registered buyers. Discretion for the owner. First look for the buyer.</p>
+  </div>
+</section>
+<section class="section section--tight">
+  <div class="wrap prose-grid">
+    <div class="prose">
+      <h2 class="h2">Why sell privately</h2>
+      <p>Some owners value privacy above exposure. Others want to test the market without a public price history, or need a sale on their own timeline. A private campaign puts a home in front of qualified buyers who are already in conversation, without a portal listing, signboard or open home.</p>
+      <p>It is not right for every home. When broad competition will set a higher price, a public campaign or auction is usually the better path. The recommendation is made on the evidence, before anything is agreed.</p>
+    </div>
+    <blockquote class="pull">"Sold off-market within 1.5 weeks... exactly as promised."<cite>Verified seller, Lane Cove</cite></blockquote>
+  </div>
+</section>
+<section class="section pc-list" aria-label="Current Private Collection">
+  <div class="wrap">${items || '<p class="lede">The collection is currently being refreshed. Join the register to hear first.</p>'}</div>
+</section>
+<section class="section register" aria-labelledby="reg-h">
+  <div class="wrap register__grid">
+    <div>
+      <p class="label">For buyers</p>
+      <h2 id="reg-h" class="display">Join the private buyer register.</h2>
+      <p class="lede">Tell Alex what you are looking for. You will hear about suitable homes before they are advertised.</p>
+    </div>
+    ${C.registerForm()}
+  </div>
+</section>
+${C.closingCta({ heading: 'Considering a private sale?', sub: 'A confidential conversation about whether an off-market campaign suits your home.' })}`;
+  write('/private-collection/', page({
+    path: '/private-collection/',
+    title: 'Private Collection: Off-Market Homes | Alex Banning',
+    description: 'Off-market and pre-market homes on the Lower North Shore, offered first to registered buyers. Discreet private sales with Alex Banning, Raine & Horne.',
+    jsonld: [breadcrumbSchema([['Home', '/'], ['Private Collection', '/private-collection/']])],
+    body,
+  }), { priority: '0.8' });
+}
+
+// =====================================================================
+// RESULTS + CASE STUDIES
+// =====================================================================
+function results() {
+  const types = ['House', 'Townhouse', 'Apartment'];
+  const subs = [...new Set(sales.map(s => s.suburb))].sort();
+  const years = [...new Set(sales.map(s => s.date && s.date.slice(0, 4)).filter(Boolean))].sort().reverse();
+  const cards = sales.map(s => `<li data-type="${s.type || ''}" data-suburb="${esc(s.suburb)}" data-year="${s.date ? s.date.slice(0, 4) : ''}" data-price="${s.price || 0}">${C.saleCard(s)}</li>`).join('');
+  const sel = (name, label, opts) => `<label class="field field--inline"><span>${label}</span><select name="${name}"><option value="">All</option>${opts.map(o => `<option>${esc(o)}</option>`).join('')}</select></label>`;
+  const body = `
+<section class="phero">
+  <div class="wrap phero__inner">
+    <p class="label">Results</p>
+    <h1 class="display display--xl">Sold properties and record results.</h1>
+    <p class="lede">${stats.domain.sold} sales and ${stats.domain.totalValue} in twelve months, ${stats.domain.auction} of them under the hammer. A selection of recent results follows, highest first.</p>
+    ${statNote(`${stats.domain.source}, ${stats.domain.period}`)}
+  </div>
+</section>
+<section class="section section--tight">
+  <div class="wrap">
+    <form class="filters" data-filters aria-label="Filter results">
+      <fieldset class="seg"><legend class="sr">Property type</legend>
+        <label><input type="radio" name="type" value="" checked><span>All</span></label>
+        ${types.map(t => `<label><input type="radio" name="type" value="${t}"><span>${t}s</span></label>`).join('')}
+      </fieldset>
+      ${sel('suburb', 'Suburb', subs)}
+      ${sel('year', 'Year', years)}
+      <p class="filters__count" aria-live="polite"><span data-count>${sales.length}</span> results</p>
+    </form>
+    <ul class="grid grid--results" role="list" data-results>${cards}</ul>
+    <p class="note">Prices shown where the result is public. Some results are withheld at the vendor's request. Days on market shown where recorded.</p>
+  </div>
+</section>
+${publicListings.length ? `<section class="section section--alt" aria-labelledby="cur-h">
+  <div class="wrap">
+    ${C.sectionHead({ label: 'Currently offered', id: 'cur-h', title: 'For sale now.', intro: 'Listings change weekly. Call Alex for the latest, or join the private buyer register for homes that are not advertised.' })}
+    <ul class="grid" role="list">${publicListings.map(l => `<li>${C.listingCard(l)}</li>`).join('')}</ul>
+  </div>
+</section>` : ''}
+${C.closingCta()}`;
+  write('/results/', page({
+    path: '/results/',
+    title: 'Sold Properties & Record Results | Alex Banning',
+    description: `Recent sales by Alex Banning across the Lower North Shore, from $4,025,000 in Chatswood West to Lane Cove apartments. ${stats.domain.sold} sales, ${stats.domain.totalValue} in 12 months.`,
+    jsonld: [breadcrumbSchema([['Home', '/'], ['Results', '/results/']]), ...publicListings.map(C.listingSchema)],
+    body,
+  }), { priority: '0.9' });
+
+  for (const cs of caseStudies) {
+    const s = saleById[cs.saleId];
+    if (!s) continue;
+    const imgs = s.images.filter(hasImage);
+    const lead = imgs[0] || s.images[0];
+    const sections = [['The challenge', cs.challenge], ['The strategy', cs.strategy], ['The campaign', cs.campaign], ['The result', cs.result]]
+      .filter(([, v]) => !isPlaceholder(v));
+    const thin = sections.length < 3;
+    const url = `/results/${s.id}/`;
+    const body = `
+${breadcrumbs([['Home', '/'], ['Results', '/results/'], [s.address, url]])}
+<section class="cs-hero">
+  <div class="cs-hero__media">${pic(lead, { eager: true, sizes: '100vw', ratio: '16/9', alt: `${s.address}, ${s.locality}, sold by Alex Banning` })}</div>
+  <div class="wrap cs-hero__copy">
+    <p class="label">Case study · ${esc(s.suburb)}</p>
+    <h1 class="display display--xl">${esc(s.address)}, ${esc(s.locality)}</h1>
+    <p class="figure">${esc(s.price ? 'Sold ' + s.priceLabel : s.priceLabel)}</p>
+  </div>
+</section>
+<section class="section section--tight">
+  <div class="wrap cs-grid">
+    <aside class="cs-facts">
+      <dl class="kv kv--stack">
+        ${[['Result', s.priceLabel], ['Method', s.method], ['Date', s.dateLabel], ['Property', [s.type, C.specs(s)].filter(Boolean).join(', ')], ['Days on market', s.daysOnMarket]]
+          .filter(([, v]) => v).map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}
+      </dl>
+      ${arrowLink(`${s.suburb} suburb guide`, `/suburbs/${s.suburbSlug}/`)}
+      ${s.url ? `<p><a class="muted" href="${s.url}" target="_blank" rel="noopener">View the campaign listing</a></p>` : ''}
+    </aside>
+    <div class="prose">
+      ${s.summary ? `<p class="lede">${esc(s.summary)}</p>` : ''}
+      ${sections.map(([h, v]) => `<h2 class="h2">${h}</h2>${md(v)}`).join('')}
+      ${s.features ? `<h2 class="h2">The home</h2><ul class="ticks">${s.features.map(f => `<li>${esc(f)}</li>`).join('')}</ul>` : ''}
+      ${!isPlaceholder(cs.quote) ? `<blockquote class="pull">${esc(cs.quote)}<cite>${esc(cs.quoteBy || 'Vendor')}</cite></blockquote>` : ''}
+    </div>
+  </div>
+</section>
+${imgs.length > 1 ? `<section class="section section--tight"><div class="wrap gallery gallery--wide">${imgs.slice(1).map(id => pic(id, { sizes: '(min-width: 900px) 33vw, 50vw', ratio: '4/5' })).join('')}</div></section>` : ''}
+${C.closingCta({ heading: 'Selling a significant home?', sub: 'Talk to Alex about preparation, method and the buyers already looking.', suburb: s.suburb })}`;
+    write(url, page({
+      path: url,
+      title: `${s.address}, ${s.locality}: ${s.price ? 'Sold ' + s.priceLabel : 'Sold'} | Alex Banning`,
+      description: `${s.address}, ${s.locality}${s.price ? ', sold for ' + s.priceLabel : ''}${s.method ? ' at ' + s.method.toLowerCase() : ''}. ${s.summary || ''}`.slice(0, 158),
+      ogImage: imgUrl(lead, 1600),
+      noindex: thin,
+      preload: preloadFor(lead, '100vw'),
+      jsonld: [breadcrumbSchema([['Home', '/'], ['Results', '/results/'], [s.address, url]])],
+      body,
+    }), { sitemap: !thin, priority: '0.7' });
+  }
+}
+
+// =====================================================================
+// ABOUT
+// =====================================================================
+function about() {
+  const tl = awards.awards;
+  const body = `
+<section class="about-hero">
+  <div class="wrap about-hero__grid">
+    <div class="about-hero__copy">
+      <p class="label">About</p>
+      <h1 class="display display--xl">Alex Banning</h1>
+      <p class="lede">${esc(SITE.jobTitle)}, ${esc(SITE.agency)}. Selling on the Lower North Shore since ${stats.yearsSelling.since}.</p>
+    </div>
+    <div class="about-hero__media">${pic('alex-walking', { eager: true, sizes: '(min-width: 900px) 45vw, 100vw', ratio: '4/5' })}</div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap longform">
+    <div class="longform__body prose">
+      <p class="dropcap">Alex Banning began his career at Ray White Lane Cove in ${stats.yearsSelling.since}. The market rewarded the same things then that it does now: preparation, judgement and a steady hand in the room.</p>
+      <h2 class="h2">Building an office</h2>
+      <p>On 1 August 2017, Alex opened Raine &amp; Horne Lane Cove as one of three founding principals. Within two years the office had grown from three to thirteen staff and taken roughly a third of the Lane Cove and Lane Cove North market. In 2019 it was named RateMyAgent Agency of the Year for Lane Cove and Lane Cove North.</p>
+      <h2 class="h2">Partner Agent and Director</h2>
+      <p>Today Alex is a Partner Agent and Director of Raine &amp; Horne Lower North Shore, working from 85 Longueville Road, Lane Cove, with the network's offices in Willoughby, Mosman and Northbridge. He holds multiple block, street and suburb records.</p>
+      <p>The volume matters for a reason. ${stats.rea.sold} sales a year means a buyer database that is active, current and deep. When a significant home comes to market, many of the right buyers are already known.</p>
+    </div>
+    <figure class="longform__aside">${pic('alex-balcony', { sizes: '(min-width: 900px) 30vw, 100vw', ratio: '4/5' })}<figcaption>Editorial portraiture to follow.</figcaption></figure>
+  </div>
+</section>
+
+<section class="section section--ink" aria-labelledby="why-h">
+  <div class="wrap">
+    ${C.sectionHead({ label: 'Significant homes', id: 'why-h', title: 'Why vendors of significant homes choose Alex.' })}
+    <div class="approach__grid approach__grid--light">
+      <article data-reveal><p class="num">I</p><h3 class="h3">Discretion</h3><p>Private and off-market campaigns for owners who value privacy, run with the same discipline as a public one.</p></article>
+      <article data-reveal><p class="num">II</p><h3 class="h3">Buyer depth</h3><p>${stats.domain.sold} sales and ${stats.domain.totalValue} in twelve months. The right buyer is often already in conversation.</p>${C.src(`${stats.domain.source}, ${stats.domain.period}`)}</article>
+      <article data-reveal><p class="num">III</p><h3 class="h3">Auction record</h3><p>${stats.domain.auction} of ${stats.domain.sold} recent sales under the hammer. Competition, managed well, sets the price.</p>${C.src(`${stats.domain.source}, ${stats.domain.period}`)}</article>
+    </div>
+  </div>
+</section>
+
+<section class="section" aria-labelledby="aw-h">
+  <div class="wrap">
+    ${C.sectionHead({ label: 'Recognition', id: 'aw-h', title: 'Awards, 2015 to 2025.' })}
+    <ol class="timeline">
+      ${tl.map(a => `<li data-reveal><span class="timeline__yr">${a.year}</span><span class="timeline__t">${esc(a.title)}</span><span class="timeline__by">${esc(a.by)}${a.note ? ` · ${esc(a.note)}` : ''}</span></li>`).join('')}
+      ${awards.ongoing.map(a => `<li data-reveal><span class="timeline__yr">Ongoing</span><span class="timeline__t">${esc(a.title)}</span><span class="timeline__by">${esc(a.by)}</span></li>`).join('')}
+    </ol>
+    ${awards.claims.map(c => `<p class="note">"${esc(c.text)}." ${esc(c.attribution)}.</p>`).join('')}
+  </div>
+</section>
+
+${C.aboutFacts(stats, awards)}
+${C.closingCta()}`;
+  write('/about/', page({
+    path: '/about/',
+    title: 'About Alex Banning | Partner Agent & Director, Raine & Horne',
+    description: `Alex Banning has sold on the Lower North Shore since ${stats.yearsSelling.since}. Co-founder of Raine & Horne Lane Cove, now Partner Agent & Director, Raine & Horne Lower North Shore.`,
+    preload: preloadFor('alex-walking', '(min-width: 900px) 45vw, 100vw'),
+    jsonld: [agentSchema(false), breadcrumbSchema([['Home', '/'], ['About', '/about/']])],
+    body,
+  }), { priority: '0.8' });
+}
+
+// =====================================================================
+// SUBURBS
+// =====================================================================
+function suburbPages() {
+  const hub = `
+<section class="phero">
+  <div class="wrap phero__inner">
+    <p class="label">Suburbs</p>
+    <h1 class="display display--xl">Suburb guides for sellers.</h1>
+    <p class="lede">What each part of the Lower North Shore is made of, who buys there, and how to sell well.</p>
+  </div>
+</section>
+<section class="section section--tight">
+  <div class="wrap">
+    <ul class="subgrid" role="list">
+      ${suburbs.map(s => `<li><a href="/suburbs/${s.slug}/"><span class="label">${esc(s.postcode)}</span><span class="subgrid__name">${esc(s.name)}</span><span class="subgrid__line">${esc(s.headline)}</span></a></li>`).join('')}
+    </ul>
+  </div>
+</section>
+${C.closingCta()}`;
+  write('/suburbs/', page({
+    path: '/suburbs/',
+    title: 'Lower North Shore Suburb Guides for Sellers | Alex Banning',
+    description: 'Suburb guides for selling on the Lower North Shore: Chatswood West, Longueville, Northbridge, Castlecrag, Mosman, Cremorne, Lane Cove and more.',
+    jsonld: [breadcrumbSchema([['Home', '/'], ['Suburbs', '/suburbs/']])],
+    body: hub,
+  }), { priority: '0.8' });
+
+  for (const s of suburbs) {
+    const { intro, faqs } = splitFaq(s.body);
+    const url = `/suburbs/${s.slug}/`;
+    const own = sales.filter(x => x.suburbSlug === s.slug);
+    const nearbySlugs = (s.neighbours || '').split(',').map(x => x.trim()).filter(Boolean);
+    const nearby = own.length ? [] : sales.filter(x => nearbySlugs.includes(x.suburbSlug)).slice(0, 3);
+    const fallback = own.length || nearby.length ? [] : sales.filter(x => x.signature).slice(0, 3);
+    const shown = own.length ? own.slice(0, 6) : nearby.length ? nearby : fallback;
+    const salesTitle = own.length ? `Alex's results in ${s.name}.` : nearby.length ? 'Recent results nearby.' : 'Signature results.';
+    const current = listings.filter(l => l.suburbSlug === s.slug && !l.private);
+    const privateHere = listings.filter(l => l.suburbSlug === s.slug && l.private);
+    const market = [['Median house price', s.medianHouse], ['Median unit price', s.medianUnit]].filter(([, v]) => !isPlaceholder(v));
+    const faqSchema = faqs.length ? {
+      '@context': 'https://schema.org', '@type': 'FAQPage',
+      mainEntity: faqs.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })),
+    } : null;
+
+    const body = `
+${breadcrumbs([['Home', '/'], ['Suburbs', '/suburbs/'], [s.name, url]])}
+<section class="phero phero--suburb">
+  <div class="wrap phero__inner">
+    <p class="label">${esc(s.eyebrow)}</p>
+    <h1 class="display display--xl">Selling in ${esc(s.name)}</h1>
+    <p class="lede">${esc(s.headline)}</p>
+    <div class="hero__ctas"><a class="btn btn--solid" href="/appraisal/?suburb=${encodeURIComponent(s.name)}">Request a private appraisal</a><a class="btn btn--line" href="${SITE.phoneHref}">${SITE.phone}</a></div>
+  </div>
+</section>
+<section class="section section--tight">
+  <div class="wrap longform">
+    <div class="longform__body prose">${md(intro)}</div>
+    <aside class="longform__aside sidecard">
+      <p class="label">${esc(s.name)} at a glance</p>
+      <dl class="kv kv--stack">
+        <div><dt>Postcode</dt><dd>${esc(s.postcode)}</dd></div>
+        <div><dt>Housing stock</dt><dd>${esc(s.stock)}</dd></div>
+        ${market.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}
+      </dl>
+      ${market.length ? statNote(s.marketSource || '') : ''}
+      <a class="btn btn--solid btn--block" href="/appraisal/?suburb=${encodeURIComponent(s.name)}">What is my home worth?</a>
+    </aside>
+  </div>
+</section>
+${shown.length ? `<section class="section section--alt" aria-labelledby="own-h">
+  <div class="wrap">
+    ${C.sectionHead({ label: 'Results', id: 'own-h', title: salesTitle, link: ['All results', '/results/'] })}
+    <ul class="grid" role="list">${shown.map(x => `<li>${C.saleCard(x)}</li>`).join('')}</ul>
+  </div>
+</section>` : ''}
+${current.length || privateHere.length ? `<section class="section" aria-labelledby="cur-h">
+  <div class="wrap">
+    ${C.sectionHead({ label: 'Currently offered', id: 'cur-h', title: `For sale in ${esc(s.name)}.` })}
+    <ul class="grid" role="list">${current.map(l => `<li>${C.listingCard(l)}</li>`).join('')}
+    ${privateHere.length ? `<li><a class="card card--private" href="/private-collection/"><div class="card__body"><p class="label">Private Collection</p><p class="card__price">${privateHere.length} off-market ${privateHere.length > 1 ? 'homes' : 'home'}</p><p>Available to registered buyers.</p><span class="more">View privately ${ICON.arrow}</span></div></a></li>` : ''}</ul>
+  </div>
+</section>` : ''}
+${faqs.length ? `<section class="section" aria-labelledby="faq-h">
+  <div class="wrap faq">
+    ${C.sectionHead({ label: 'Questions', id: 'faq-h', title: `Selling in ${esc(s.name)}: common questions.` })}
+    <div class="faq__list">${faqs.map(f => `<details><summary>${esc(f.q)}</summary><div class="faq__a">${md(f.a)}</div></details>`).join('')}</div>
+  </div>
+</section>` : ''}
+${nearbySlugs.length ? `<nav class="section section--tight nearby" aria-label="Nearby suburbs"><div class="wrap"><p class="label">Nearby</p><ul role="list">${nearbySlugs.filter(n => suburbBySlug[n]).map(n => `<li><a href="/suburbs/${n}/">${esc(suburbBySlug[n].name)}</a></li>`).join('')}</ul></div></nav>` : ''}
+${C.closingCta({ heading: `Considering a sale in ${s.name}?`, sub: 'A confidential conversation, and an honest view of value, costs nothing.', suburb: s.name })}`;
+    write(url, page({
+      path: url,
+      title: s.title,
+      description: s.description,
+      jsonld: [breadcrumbSchema([['Home', '/'], ['Suburbs', '/suburbs/'], [s.name, url]]), faqSchema, ...current.map(C.listingSchema)],
+      body,
+    }), { priority: '0.8' });
+  }
+}
+
+// =====================================================================
+// REVIEWS
+// =====================================================================
+function reviewsPage() {
+  const r = stats.reviews;
+  const max = Math.max(...r.realestate.tags.map(t => t.count));
+  const body = `
+<section class="phero">
+  <div class="wrap phero__inner">
+    <p class="label">Reviews</p>
+    <h1 class="display display--xl">${r.ratemyagent.count} verified reviews.</h1>
+    <p class="lede">Volume says more than adjectives. Read them in full where they were written.</p>
+  </div>
+</section>
+<section class="section section--tight">
+  <div class="wrap scores">
+    <a class="score" href="${SITE.profiles.ratemyagent}" target="_blank" rel="noopener">
+      <p class="label">RateMyAgent</p>
+      <p class="score__fig">${r.ratemyagent.rating}<span>/5</span></p>
+      <p>${r.ratemyagent.count} reviews, ${r.ratemyagent.fiveStar} of them five-star</p>
+      <span class="more">Read on RateMyAgent ${ICON.arrow}</span>
+    </a>
+    <a class="score" href="${SITE.profiles.realestate}" target="_blank" rel="noopener">
+      <p class="label">realestate.com.au</p>
+      <p class="score__fig">${r.realestate.rating.toFixed(1)}<span>/5</span></p>
+      <p>${r.realestate.count} reviews</p>
+      <span class="more">Read on realestate.com.au ${ICON.arrow}</span>
+    </a>
+    <div class="score score--tags">
+      <p class="label">What reviewers mention most</p>
+      <ul class="bars" role="list">${r.realestate.tags.map(t => `<li><span class="bars__l">${esc(t.label)}</span><span class="bars__b" style="--w:${(t.count / max * 100).toFixed(1)}%"></span><span class="bars__n">${t.count}</span></li>`).join('')}</ul>
+      ${C.src(`realestate.com.au review tags, ${r.realestate.asAt}`)}
+    </div>
+  </div>
+  <div class="wrap">${C.src(`Ratings as at ${r.ratemyagent.asAt}.`)}</div>
+</section>
+<section class="section section--alt" aria-labelledby="q-h">
+  <div class="wrap">
+    <h2 id="q-h" class="label">Selected comments</h2>
+    <ul class="quotes" role="list">${reviews.quotes.map(q => `<li data-reveal><blockquote><p>${esc(q.text)}</p></blockquote><p class="quotes__by">${esc(q.who)}, ${esc(q.suburb)}${q.source ? ` · ${esc(q.source)}${q.date ? ', ' + esc(q.date) : ''}` : ''}</p></li>`).join('')}</ul>
+  </div>
+</section>
+<section class="section section--tight">
+  <div class="wrap center">
+    <p class="lede">Worked with Alex?</p>
+    <a class="btn btn--line" href="${SITE.profiles.googleBusiness}" target="_blank" rel="noopener">Leave a Google review</a>
+  </div>
+</section>
+${C.closingCta()}`;
+  write('/reviews/', page({
+    path: '/reviews/',
+    title: `Reviews: ${r.ratemyagent.rating} Stars from ${r.ratemyagent.count} Sellers | Alex Banning`,
+    description: `${r.ratemyagent.rating} stars from ${r.ratemyagent.count} reviews on RateMyAgent and ${r.realestate.rating.toFixed(1)} from ${r.realestate.count} on realestate.com.au. Read what Lower North Shore sellers say about Alex Banning.`,
+    jsonld: [agentSchema(true), breadcrumbSchema([['Home', '/'], ['Reviews', '/reviews/']])],
+    body,
+  }), { priority: '0.7' });
+}
+
+// =====================================================================
+// INSIGHTS
+// =====================================================================
+function insightsPages() {
+  const published = insights.filter(i => i.status === 'published');
+  const drafts = insights.filter(i => i.status !== 'published');
+  const body = `
+<section class="phero">
+  <div class="wrap phero__inner">
+    <p class="label">Insights</p>
+    <h1 class="display display--xl">Notes on the Lower North Shore market.</h1>
+    <p class="lede">Considered, occasional writing on pricing, method and the suburbs Alex sells in.</p>
+  </div>
+</section>
+<section class="section section--tight">
+  <div class="wrap">
+    ${published.length ? `<ul class="articles" role="list">${published.map(a => `<li><a href="/insights/${a.slug}/"><span class="label">${esc(a.date || '')}</span><span class="articles__t">${esc(a.title)}</span><span class="articles__d">${esc(a.description)}</span></a></li>`).join('')}</ul>` : ''}
+    ${drafts.length ? `<h2 class="label">In preparation</h2><ul class="articles articles--soon" role="list">${drafts.map(a => `<li><span class="articles__t">${esc(a.title.replace(/\s*\[[^\]]+\]/, ''))}</span><span class="articles__d">${esc(a.description)}</span></li>`).join('')}</ul>` : ''}
+  </div>
+</section>
+${C.closingCta()}`;
+  write('/insights/', page({
+    path: '/insights/',
+    title: 'Insights: Lower North Shore Property Market | Alex Banning',
+    description: 'Market notes from Alex Banning on selling prestige homes, auction versus off-market campaigns and the Lane Cove market.',
+    jsonld: [breadcrumbSchema([['Home', '/'], ['Insights', '/insights/']])],
+    body,
+  }), { priority: '0.5' });
+
+  for (const a of published) {
+    const url = `/insights/${a.slug}/`;
+    write(url, page({
+      path: url,
+      title: `${a.title} | Alex Banning`,
+      description: a.description,
+      jsonld: [{
+        '@context': 'https://schema.org', '@type': 'Article', headline: a.title, description: a.description,
+        datePublished: a.date, author: { '@id': abs('/#person') }, publisher: { '@id': abs('/#alex') }, mainEntityOfPage: abs(url),
+      }, breadcrumbSchema([['Home', '/'], ['Insights', '/insights/'], [a.title, url]])],
+      body: `${breadcrumbs([['Home', '/'], ['Insights', '/insights/'], [a.title, url]])}
+<article class="section"><div class="wrap narrow prose"><p class="label">${esc(a.date || '')}</p><h1 class="display display--xl">${esc(a.title)}</h1>${md(a.body)}</div></article>
+${C.closingCta()}`,
+    }), { priority: '0.5' });
+  }
+}
+
+// =====================================================================
+// APPRAISAL, CONTACT, LEGAL, THANK YOU, 404
+// =====================================================================
+function appraisal() {
+  const body = `
+<section class="section appraisal">
+  <div class="wrap appraisal__grid">
+    <div class="appraisal__copy">
+      <p class="label">Private appraisal</p>
+      <h1 class="display display--xl">An honest view of value.</h1>
+      <p class="lede">Four short steps. Alex will prepare a considered appraisal using recent comparable sales and the buyers he is speaking with now, and call to discuss it.</p>
+      <ul class="ticks">
+        <li>Confidential. Nothing is shared or published.</li>
+        <li>No obligation, and no cost.</li>
+        <li>Advice on method: auction, private treaty or off market.</li>
+      </ul>
+      <p class="muted">Prefer to talk? <a href="${SITE.phoneHref}">${SITE.phone}</a></p>
+    </div>
+    <div class="appraisal__form">${C.appraisalForm()}</div>
+  </div>
+</section>
+${C.proofBand(stats, { dark: false })}`;
+  write('/appraisal/', page({
+    path: '/appraisal/',
+    title: 'Request a Private Property Appraisal | Alex Banning',
+    description: 'Request a confidential appraisal of your Lower North Shore home from Alex Banning, Raine & Horne Partner Agent. Four short steps, no obligation.',
+    jsonld: [breadcrumbSchema([['Home', '/'], ['Appraisal', '/appraisal/']])],
+    body,
+  }), { priority: '0.9' });
+}
+
+function contact() {
+  const o = SITE.office;
+  const q = encodeURIComponent(`${o.street}, ${o.locality} ${o.region} ${o.postcode}`);
+  const body = `
+<section class="phero">
+  <div class="wrap phero__inner">
+    <p class="label">Contact</p>
+    <h1 class="display display--xl">Speak with Alex.</h1>
+  </div>
+</section>
+<section class="section section--tight">
+  <div class="wrap contact__grid">
+    <div>
+      <dl class="kv kv--stack kv--lg">
+        <div><dt>Mobile</dt><dd><a href="${SITE.phoneHref}">${SITE.phone}</a></dd></div>
+        <div><dt>Email</dt><dd><a href="mailto:${SITE.email}">${SITE.email}</a></dd></div>
+        <div><dt>Office</dt><dd>${esc(o.street)}<br>${esc(o.locality)} ${o.region} ${o.postcode}</dd></div>
+        ${o.hours && o.hours.length ? `<div><dt>Hours</dt><dd>${o.hours.map(h => `${esc(h.days)}: ${esc(h.time)}`).join('<br>')}</dd></div>` : ''}
+      </dl>
+      <p><a class="btn btn--line" href="/alex-banning.vcf" download>Save contact (vCard)</a></p>
+    </div>
+    <div>
+      <h2 class="h3">Send a message</h2>
+      ${C.enquiryForm({ kind: 'contact', subject: 'Website contact', button: 'Send message' })}
+    </div>
+  </div>
+  <div class="wrap map" data-map="https://www.google.com/maps?q=${q}&amp;output=embed">
+    <a class="map__link" href="https://www.google.com/maps/search/?api=1&amp;query=${q}" target="_blank" rel="noopener">Open ${esc(o.street)}, ${esc(o.locality)} in Google Maps</a>
+  </div>
+</section>`;
+  write('/contact/', page({
+    path: '/contact/',
+    title: 'Contact Alex Banning | Raine & Horne Lower North Shore',
+    description: `Contact Alex Banning on ${SITE.phone} or ${SITE.email}. Raine & Horne Lower North Shore, ${o.street}, ${o.locality}.`,
+    jsonld: [agentSchema(false), breadcrumbSchema([['Home', '/'], ['Contact', '/contact/']])],
+    body,
+  }), { priority: '0.6' });
+
+  const vcf = [
+    'BEGIN:VCARD', 'VERSION:3.0', 'N:Banning;Alex;;;', 'FN:Alex Banning',
+    `ORG:${SITE.agency}`, `TITLE:${SITE.jobTitle}`,
+    `TEL;TYPE=CELL:+61434131903`, `EMAIL;TYPE=WORK:${SITE.email}`,
+    `ADR;TYPE=WORK:;;${o.street};${o.locality};${o.region};${o.postcode};Australia`,
+    `URL:${SITE.url}`, 'END:VCARD', '',
+  ].join('\r\n');
+  fs.writeFileSync(path.join(OUT, 'alex-banning.vcf'), vcf);
+}
+
+function legal() {
+  const privacy = `
+<section class="section"><div class="wrap narrow prose">
+<h1 class="display display--xl">Privacy policy</h1>
+<p>This policy explains how Alex Banning and ${esc(SITE.agency)} (${esc(SITE.entity)}) handle personal information collected through this website. We comply with the Australian Privacy Principles in the Privacy Act 1988 (Cth).</p>
+<h2 class="h2">What we collect</h2>
+<p>When you submit a form we collect the details you provide, such as your name, mobile, email, property address and preferences. We also collect standard analytics information about how the site is used.</p>
+<h2 class="h2">How we use it</h2>
+<p>We use your details to respond to your enquiry, prepare an appraisal, tell you about homes that match your brief, and, only if you ask, send market updates. We do not sell your information.</p>
+<h2 class="h2">Marketing and the Spam Act</h2>
+<p>We send electronic marketing only with your consent. Every message identifies us and includes a way to unsubscribe, which we honour promptly.</p>
+<h2 class="h2">Service providers</h2>
+<p>Form submissions are processed by a third-party form service and delivered to ${esc(SITE.email)}. Analytics and advertising tools (Google Analytics, Google Ads and Meta) may set cookies to measure the site's performance.</p>
+<h2 class="h2">Access and correction</h2>
+<p>To access or correct your information, or to make a complaint, contact <a href="mailto:${SITE.email}">${SITE.email}</a> or call ${SITE.phone}.</p>
+<p class="note">Last updated ${stats.asAt}. This policy should be reviewed against the Raine &amp; Horne network privacy policy before launch.</p>
+</div></section>`;
+  write('/privacy/', page({ path: '/privacy/', title: 'Privacy Policy | Alex Banning', description: 'How Alex Banning and Raine & Horne Lower North Shore collect, use and protect your personal information.', body: privacy }), { priority: '0.2' });
+
+  const terms = `
+<section class="section"><div class="wrap narrow prose">
+<h1 class="display display--xl">Terms of use</h1>
+<p>This website is published by Alex Banning of ${esc(SITE.agency)} (${esc(SITE.entity)}). Information on this site is general in nature and is not financial, legal or valuation advice.</p>
+<h2 class="h2">Statistics and results</h2>
+<p>Statistics are drawn from third-party sources, named beside each figure with the period they cover. Results shown are past results and are not a guarantee of future outcomes. Appraisals are opinions of likely selling price, not formal valuations.</p>
+<h2 class="h2">Photography</h2>
+<p>${esc(SITE.photoCredit)}. Images may not be reproduced without permission.</p>
+<h2 class="h2">Links</h2>
+<p>Links to third-party sites are provided for convenience. We are not responsible for their content.</p>
+</div></section>`;
+  write('/terms/', page({ path: '/terms/', title: 'Terms of Use | Alex Banning', description: 'Terms of use for alex-banning.com.', body: terms }), { priority: '0.2' });
+
+  write('/thank-you/', page({
+    path: '/thank-you/', noindex: true, title: 'Thank you | Alex Banning', description: 'Thank you for your enquiry.',
+    body: `<section class="section"><div class="wrap narrow center"><p class="label">Received</p><h1 class="display display--xl">Thank you.</h1><p class="lede">Alex will be in touch shortly, usually the same business day. If it is urgent, call <a href="${SITE.phoneHref}">${SITE.phone}</a>.</p><p><a class="btn btn--line" href="/results/">View recent results</a></p></div></section>`,
+  }), { sitemap: false });
+
+  write('/404.html', page({
+    path: '/404.html', noindex: true, title: 'Page not found | Alex Banning', description: 'Page not found.',
+    body: `<section class="section"><div class="wrap narrow center"><p class="label">404</p><h1 class="display display--xl">This page has moved.</h1><p class="lede">Try the <a href="/results/">results</a>, the <a href="/suburbs/">suburb guides</a> or <a href="/">start again</a>.</p></div></section>`,
+  }), { sitemap: false });
+}
+
+// =====================================================================
+// SITEMAP, ROBOTS, LLMS.TXT
+// =====================================================================
+function meta() {
+  const today = new Date().toISOString().slice(0, 10);
+  fs.writeFileSync(path.join(OUT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map(u => `  <url><loc>https://alexbanning.com.au${u}</loc><changefreq>weekly</changefreq></url>`).join('\n')}
-</urlset>`;
-write(path.join(out, 'sitemap.xml'), sitemap);
-
-write(path.join(out, 'robots.txt'), `User-agent: *
-Allow: /
-Sitemap: https://alexbanning.com.au/sitemap.xml
+${pages.map(p => `  <url><loc>${abs(p.urlPath)}</loc><lastmod>${today}</lastmod><priority>${p.priority}</priority></url>`).join('\n')}
+</urlset>
 `);
+  fs.writeFileSync(path.join(OUT, 'robots.txt'), `User-agent: *\nAllow: /\nDisallow: /thank-you/\n\nSitemap: ${abs('/sitemap.xml')}\n`);
+  const r = stats.reviews;
+  fs.writeFileSync(path.join(OUT, 'llms.txt'), `# Alex Banning
 
-console.log(`Generated ${SUBURBS.length} suburb pages and ${urls.length} URLs total.`);
+> Alex Banning is a ${SITE.jobTitle} at ${SITE.agency} (${SITE.entity}), based at ${SITE.office.street}, ${SITE.office.locality} NSW ${SITE.office.postcode}, Sydney, Australia. He has sold real estate since ${stats.yearsSelling.since}.
+
+## Key facts (with sources)
+- ${stats.domain.sold} sales worth ${stats.domain.totalValue} in the ${stats.domain.period}; ${stats.domain.auction} at auction, ${stats.domain.privateTreaty} by private treaty (${stats.domain.source}).
+- ${stats.rea.sold} sales, median price ${stats.rea.medianPrice}, median ${stats.rea.medianDaysAdvertised} days advertised, ${stats.rea.period} (${stats.rea.source}).
+- Reviews: ${r.ratemyagent.rating}/5 from ${r.ratemyagent.count} reviews on RateMyAgent; ${r.realestate.rating.toFixed(1)}/5 from ${r.realestate.count} on realestate.com.au (${r.ratemyagent.asAt}).
+- Highest recent sale: 10 Hawthorne Avenue, Chatswood (West), sold at auction on 14 February 2026 for $4,025,000.
+- Career: began at Ray White Lane Cove; one of three founding principals of Raine & Horne Lane Cove (opened 1 August 2017).
+- Awards: ${awards.awards.filter(a => !a.agency).map(a => `${a.by ? a.by + ' ' : ''}${a.year} ${a.title}`).join('; ')}.
+- Areas: ${suburbs.map(s => s.name).join(', ')}.
+- Contact: ${SITE.phone}, ${SITE.email}.
+
+## Pages
+- [About Alex Banning](${abs('/about/')})
+- [Results](${abs('/results/')})
+- [Private Collection (off-market homes)](${abs('/private-collection/')})
+- [Reviews](${abs('/reviews/')})
+- [Request a private appraisal](${abs('/appraisal/')})
+${suburbs.map(s => `- [Selling in ${s.name}](${abs('/suburbs/' + s.slug + '/')})`).join('\n')}
+`);
+}
+
+// =====================================================================
+// RUN
+// =====================================================================
+fs.rmSync(OUT, { recursive: true, force: true });
+copyDir(path.join(U.ROOT, 'static'), OUT);
+home();
+privateCollection();
+results();
+about();
+suburbPages();
+reviewsPage();
+insightsPages();
+appraisal();
+contact();
+legal();
+meta();
+const missing = U.REG_BY_ID ? Object.keys(U.REG_BY_ID).filter(id => !hasImage(id)) : [];
+console.log(`Built ${pages.length} indexed pages into public/.`);
+if (missing.length) console.log(`${missing.length} images not yet processed (placeholders shown). Run: npm run images`);

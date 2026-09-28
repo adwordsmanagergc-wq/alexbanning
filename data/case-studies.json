@@ -1,0 +1,32 @@
+{
+  "_note": "Case study copy. Any field left null (or containing [TO CONFIRM]) is hidden on the page. A case study with fewer than three filled sections is published with noindex and left out of the sitemap until Alex supplies the rest. Vendor quotes must be real and approved by the vendor.",
+  "caseStudies": [
+    {
+      "saleId": "10-hawthorne-avenue-chatswood",
+      "challenge": "A family estate held by one family for more than forty years, coming to market for the first time in a generation. The task was to find the few buyers for whom it was the right house, and bring them to the same point at the same time.",
+      "strategy": null,
+      "campaign": "Taken to auction. The home offered four bedrooms in double brick on a corner parcel, a saltwater pool, a helical staircase, two Jetmaster fireplaces and a studio.",
+      "result": "Sold under the hammer on 14 February 2026 for $4,025,000.",
+      "quote": null,
+      "quoteBy": null
+    },
+    {
+      "saleId": "2-34-tobruk-avenue-cremorne",
+      "challenge": null,
+      "strategy": null,
+      "campaign": null,
+      "result": "Sold in November 2025 for $2,330,000.",
+      "quote": null,
+      "quoteBy": null
+    },
+    {
+      "saleId": "g09-28-mindarie-street-lane-cove",
+      "challenge": null,
+      "strategy": null,
+      "campaign": null,
+      "result": "Sold for $1,700,000.",
+      "quote": null,
+      "quoteBy": null
+    }
+  ]
+}

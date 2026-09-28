@@ -7,7 +7,8 @@ Run `npm run check` at any time for the live list of placeholders.
 - [ ] **Listing photography.** Run `npm run images` from a machine with internet access. The campaign image CDN (`d3g1fm0n641hm7.cloudfront.net`) was not reachable from the build environment, so 37 images (all of Hawthorne, Sharland and the Lane Cove campaigns) are still placeholders. Commit `static/assets/img/` and `data/images.manifest.json` afterwards.
 - [ ] **Hawthorne alt text and hero order.** After images are processed, open `images/contact-sheet.html`, rewrite the ten `hawthorne-*` alt texts to describe each shot, and order them pool, garden, staircase, facade.
 - [x] **Photography permission.** Raine & Horne office approved use of campaign imagery (confirmed 28 Sep 2026). Footer credit stays in place.
-- [ ] **Form endpoint.** Create a Formspree form delivering to alex.banning@rh.com.au; set `FORM_ENDPOINT` in Vercel.
+- [x] **Form endpoint (interim).** Forms post over HTTPS to FormSubmit, delivering to adwordsmanagergc@gmail.com. The first submission sends an activation email to that inbox: click it once or nothing is delivered.
+- [ ] **Form endpoint (launch).** Switch `forms.endpoint` in `data/site.json` to alex.banning@rh.com.au, or to the random alias FormSubmit issues after activation so the address is not visible in the page source.
 - [ ] **Privacy policy.** Review `/privacy/` against the Raine & Horne network policy.
 - [ ] **Domain.** Point alex-banning.com at the Vercel project; confirm `https://www.alex-banning.com` is the canonical host (or set `SITE_URL`).
 

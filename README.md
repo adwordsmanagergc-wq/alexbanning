@@ -55,7 +55,7 @@ Set in Vercel, Project Settings, Environment Variables. All optional; features s
 
 | Variable | Purpose |
 |---|---|
-| `FORM_ENDPOINT` | Formspree form URL (e.g. `https://formspree.io/f/abcdwxyz`) delivering to alex.banning@rh.com.au. Without it, forms show the phone and email instead. |
+| `FORM_ENDPOINT` | Overrides `forms.endpoint` in `data/site.json`. Currently FormSubmit (`https://formsubmit.co/<email>`), sending to adwordsmanagergc@gmail.com for now. A Formspree URL also works. |
 | `GA4_ID` | GA4 measurement ID. Form success fires `generate_lead` (mark it as a key event/conversion in GA4). |
 | `GOOGLE_ADS_ID`, `GOOGLE_ADS_LEAD_LABEL` | Google Ads conversion (`AW-XXXX` and its label). |
 | `META_PIXEL_ID` | Meta Pixel. Form success fires `Lead`. |

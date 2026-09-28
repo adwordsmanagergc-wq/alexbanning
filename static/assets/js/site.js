@@ -183,7 +183,7 @@
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       if (!validate(form)) { status.textContent = 'Please complete the highlighted fields.'; status.classList.add('is-error'); return; }
-      if (form._gotcha && form._gotcha.value) return;
+      if (form._honey && form._honey.value) return;
       var btn = form.querySelector('button[type="submit"]');
       var onSuccess = function () {
         trackLead(kind);
@@ -197,8 +197,11 @@
         return;
       }
       btn.disabled = true; status.classList.remove('is-error'); status.textContent = 'Sending…';
-      fetch(CFG.endpoint, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } })
-        .then(function (res) { if (!res.ok) throw new Error(res.status); onSuccess(); })
+      // FormSubmit answers JSON on its /ajax/ path; other providers (e.g. Formspree) use the URL as given.
+      var url = CFG.endpoint.replace('://formsubmit.co/', '://formsubmit.co/ajax/');
+      fetch(url, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } })
+        .then(function (res) { if (!res.ok) throw new Error(res.status); return res.json().catch(function () { return {}; }); })
+        .then(function (data) { if (data && String(data.success) === 'false') throw new Error(data.message || 'rejected'); onSuccess(); })
         .catch(function () {
           btn.disabled = false; status.classList.add('is-error');
           status.innerHTML = 'Something went wrong. Please call <a href="tel:+61434131903">' + CFG.phone + '</a>.';

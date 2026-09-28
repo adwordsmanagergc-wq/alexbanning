@@ -53,8 +53,8 @@
     "googleAdsLeadLabel": ""
   },
   "forms": {
-    "endpoint": "",
-    "_endpointNote": "Formspree form URL, e.g. https://formspree.io/f/xxxxxxx, configured to deliver to alex.banning@rh.com.au. Env: FORM_ENDPOINT."
+    "endpoint": "https://formsubmit.co/adwordsmanagergc@gmail.com",
+    "_endpointNote": "FormSubmit (formsubmit.co), HTTPS, no account needed. Currently delivering to adwordsmanagergc@gmail.com for now. The first submission sends an activation email to that address; click it once. Change to alex.banning@rh.com.au (or the random alias FormSubmit issues after activation) at launch. Env override: FORM_ENDPOINT."
   },
   "googleMapsKey": "",
   "credit": {

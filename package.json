@@ -1,0 +1,19 @@
+{
+  "name": "alex-banning-site",
+  "private": true,
+  "version": "2.0.0",
+  "description": "alex-banning.com: static site generator for Alex Banning, Raine & Horne Lower North Shore",
+  "scripts": {
+    "build": "node build.js",
+    "images": "node scripts/images.js",
+    "fonts": "node scripts/fonts.js",
+    "check": "node scripts/check.js",
+    "serve": "npx --yes serve public -l 4173"
+  },
+  "engines": { "node": ">=18" },
+  "devDependencies": {
+    "@fontsource-variable/cormorant-garamond": "^5.0.0",
+    "@fontsource-variable/inter": "^5.0.0",
+    "sharp": "^0.33.5"
+  }
+}

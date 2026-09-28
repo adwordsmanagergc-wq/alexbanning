@@ -1,0 +1,21 @@
+{
+  "_note": "Wording is exact. Do not upgrade or paraphrase award names.",
+  "awards": [
+    { "year": 2025, "title": "Top Agent, Lane Cove", "by": "realestate.com.au" },
+    { "year": 2024, "title": "Top performing agent, Lane Cove", "by": "realestate.com.au" },
+    { "year": 2024, "title": "3rd Top NSW Auction Lister", "by": "Raine & Horne" },
+    { "year": 2023, "title": "3rd Top NSW Salesperson (by sales count)", "by": "Raine & Horne" },
+    { "year": 2021, "title": "Agent of the Year, Lane Cove", "by": "RateMyAgent" },
+    { "year": 2019, "title": "Agency of the Year, Lane Cove / Lane Cove North", "by": "RateMyAgent", "note": "Awarded to Raine & Horne Lane Cove, co-founded by Alex", "agency": true },
+    { "year": 2018, "title": "Agent of the Year, Lane Cove North", "by": "RateMyAgent" },
+    { "year": 2017, "title": "Top performing sales agent", "by": "Elite Agent Awards" },
+    { "year": 2016, "title": "Top performing sales agent", "by": "Elite Agent Awards" },
+    { "year": 2015, "title": "Premier Agent Award", "by": "" }
+  ],
+  "ongoing": [
+    { "title": "Multiple Chairman's Club awards", "by": "Raine & Horne" }
+  ],
+  "claims": [
+    { "text": "Consistently ranked in the top 10 sales agents Australia wide", "attribution": "Alex Banning's Domain profile" }
+  ]
+}

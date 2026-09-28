@@ -1,0 +1,65 @@
+{
+  "_note": "Global settings. Tracking and form IDs can be overridden by environment variables at build time (see README).",
+  "url": "https://www.alex-banning.com",
+  "name": "Alex Banning",
+  "jobTitle": "Partner Agent & Director",
+  "entity": "Banning Enterprises Pty Ltd",
+  "agency": "Raine & Horne Lower North Shore",
+  "licence": "[LICENCE NO.]",
+  "phone": "0434 131 903",
+  "phoneHref": "tel:+61434131903",
+  "email": "alex.banning@rh.com.au",
+  "office": {
+    "name": "Raine & Horne Lower North Shore, Lane Cove",
+    "street": "85 Longueville Road",
+    "locality": "Lane Cove",
+    "region": "NSW",
+    "postcode": "2066",
+    "hours": [],
+    "_hoursNote": "Add office hours, e.g. {\"days\":\"Monday to Friday\",\"time\":\"9am to 5:30pm\"}. Hidden on the site until filled."
+  },
+  "networkOffices": [
+    {
+      "name": "Lane Cove",
+      "addr": "85 Longueville Road, Lane Cove NSW 2066"
+    },
+    {
+      "name": "Willoughby",
+      "addr": "293 Penshurst Street, Willoughby NSW 2068"
+    },
+    {
+      "name": "Mosman",
+      "addr": "145 Middle Head Road, Mosman NSW 2088"
+    },
+    {
+      "name": "Northbridge",
+      "addr": "79 Sailors Bay Road, Northbridge NSW 2063"
+    }
+  ],
+  "profiles": {
+    "instagram": "https://www.instagram.com/alexbanning_realestate/",
+    "youtube": "https://www.youtube.com/channel/UC2ykrLretDkW5NiaIRe-rNQ",
+    "realestate": "https://www.realestate.com.au/agent/alex-banning-1856054",
+    "domain": "https://www.domain.com.au/real-estate-agent/alex-banning-1406572/",
+    "ratemyagent": "https://www.ratemyagent.com.au/real-estate-agent/alex-banning-ab054/sales/overview",
+    "raineandhorne": "https://www.raineandhorne.com.au/lns/team/alex-banning-8025",
+    "facebook": "https://www.facebook.com/rhlowernorthshore/",
+    "googleBusiness": "https://share.google/ALCSJNGulIZk4l4eU"
+  },
+  "tracking": {
+    "ga4": "",
+    "metaPixel": "",
+    "googleAds": "",
+    "googleAdsLeadLabel": ""
+  },
+  "forms": {
+    "endpoint": "",
+    "_endpointNote": "Formspree form URL, e.g. https://formspree.io/f/xxxxxxx, configured to deliver to alex.banning@rh.com.au. Env: FORM_ENDPOINT."
+  },
+  "googleMapsKey": "",
+  "credit": {
+    "label": "Metatap Digital",
+    "url": "https://metatapdigital.com"
+  },
+  "photoCredit": "Photography: Raine & Horne campaign imagery"
+}

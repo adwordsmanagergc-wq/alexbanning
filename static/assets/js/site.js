@@ -200,11 +200,16 @@
       // FormSubmit answers JSON on its /ajax/ path; other providers (e.g. Formspree) use the URL as given.
       var url = CFG.endpoint.replace('://formsubmit.co/', '://formsubmit.co/ajax/');
       fetch(url, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json' } })
-        .then(function (res) { if (!res.ok) throw new Error(res.status); return res.json().catch(function () { return {}; }); })
+        .then(function (res) { return res.json().catch(function () { return {}; }).then(function (data) { if (!res.ok && !(data && data.message)) throw new Error(String(res.status)); return data; }); })
         .then(function (data) { if (data && String(data.success) === 'false') throw new Error(data.message || 'rejected'); onSuccess(); })
-        .catch(function () {
+        .catch(function (err) {
           btn.disabled = false; status.classList.add('is-error');
-          status.innerHTML = 'Something went wrong. Please call <a href="tel:+61434131903">' + CFG.phone + '</a>.';
+          var why = err && err.message && !(err instanceof TypeError) && !/^\d+$/.test(err.message) ? err.message : '';
+          if (window.console) console.warn('Form submission failed:', err);
+          status.textContent = '';
+          status.appendChild(document.createTextNode((why ? why + ' ' : 'Something went wrong. ') + 'Please call '));
+          var a = document.createElement('a'); a.href = 'tel:+61434131903'; a.textContent = CFG.phone;
+          status.appendChild(a); status.appendChild(document.createTextNode('.'));
         });
     });
   });

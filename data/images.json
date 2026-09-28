@@ -11,70 +11,70 @@
     {
       "id": "hawthorne-01",
       "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169644893__1761279707-83062-6295727.jpg",
-      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "alt": "Front entrance at 10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
       "role": "hero",
       "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
     },
     {
       "id": "hawthorne-02",
       "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568469__1761262964-28155-6291704.jpg",
-      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "alt": "Garden terrace at 10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
       "role": "hero",
       "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
     },
     {
       "id": "hawthorne-03",
       "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568461__1761262951-28108-6291698.jpg",
-      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "alt": "Pool at 10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
       "role": "hero",
       "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
     },
     {
       "id": "hawthorne-04",
       "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169644918__1761279709-82859-6295729.jpg",
-      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "alt": "Living room opening to the covered terrace at 10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
       "role": "hero",
       "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
     },
     {
       "id": "hawthorne-05",
       "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568463__1761262953-28143-6291699.jpg",
-      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "alt": "Kitchen at 10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
       "role": "hero",
       "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
     },
     {
       "id": "hawthorne-06",
       "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568467__1761262959-28074-6291702.jpg",
-      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "alt": "Formal living room at 10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
       "role": "hero",
       "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
     },
     {
       "id": "hawthorne-07",
       "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568464__1761262955-28069-6291701.jpg",
-      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "alt": "Main bedroom at 10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
       "role": "hero",
       "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
     },
     {
       "id": "hawthorne-08",
       "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568456__1761262941-27934-6291694.jpg",
-      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "alt": "Bathroom at 10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
       "role": "hero",
       "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
     },
     {
       "id": "hawthorne-09",
       "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568452__1761262939-28093-6291690.jpg",
-      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "alt": "Bedroom at 10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
       "role": "hero",
       "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
     },
     {
       "id": "hawthorne-10",
       "src": "https://d3g1fm0n641hm7.cloudfront.net/properties/858/169568468__1761262962-28009-6291703.jpg",
-      "alt": "10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
+      "alt": "Rear lawn and garden at 10 Hawthorne Avenue, Chatswood, sold by Alex Banning for $4,025,000",
       "role": "hero",
       "todo": "After running npm run images, open images/contact-sheet.html and rewrite this alt text to describe the shot (pool, garden, staircase, facade)."
     },

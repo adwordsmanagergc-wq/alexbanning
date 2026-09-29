@@ -715,7 +715,7 @@ function legal() {
 <h2 class="h2">Marketing and the Spam Act</h2>
 <p>We send electronic marketing only with your consent. Every message identifies us and includes a way to unsubscribe, which we honour promptly.</p>
 <h2 class="h2">Service providers</h2>
-<p>Form submissions are processed by a third-party form service and delivered to ${esc(SITE.email)}. Analytics and advertising tools (Google Analytics, Google Ads and Meta) may set cookies to measure the site's performance.</p>
+<p>Form submissions are processed by a third-party form service and delivered to ${esc(SITE.email)}. We use Vercel Web Analytics, which counts visits without cookies or personal identifiers. Advertising and analytics tools (Google Analytics, Google Ads and Meta), where enabled, may set cookies to measure the site's performance.</p>
 <h2 class="h2">Access and correction</h2>
 <p>To access or correct your information, or to make a complaint, contact <a href="mailto:${SITE.email}">${SITE.email}</a> or call ${SITE.phone}.</p>
 <p class="note">Last updated ${stats.asAt}. This policy should be reviewed against the Raine &amp; Horne network privacy policy before launch.</p>

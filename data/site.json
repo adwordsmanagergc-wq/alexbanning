@@ -47,6 +47,7 @@
     "googleBusiness": "https://share.google/ALCSJNGulIZk4l4eU"
   },
   "tracking": {
+    "vercelAnalytics": true,
     "ga4": "",
     "metaPixel": "",
     "googleAds": "",

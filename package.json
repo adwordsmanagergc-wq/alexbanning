@@ -10,10 +10,15 @@
     "check": "node scripts/check.js",
     "serve": "npx --yes serve public -l 4173"
   },
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
     "@fontsource-variable/cormorant-garamond": "^5.0.0",
     "@fontsource-variable/inter": "^5.0.0",
     "sharp": "^0.33.5"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
   }
 }

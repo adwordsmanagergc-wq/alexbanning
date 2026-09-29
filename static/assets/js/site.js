@@ -127,6 +127,7 @@
         if (CFG.adsSendTo) window.gtag('event', 'conversion', { send_to: CFG.adsSendTo });
       }
       if (window.fbq) window.fbq('track', 'Lead', { content_name: kind });
+      if (window.va) window.va('event', { name: 'Lead', data: { form: kind, page: location.pathname } });
     } catch (e) { /* never block a lead on analytics */ }
   }
 

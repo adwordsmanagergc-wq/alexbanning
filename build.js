@@ -64,106 +64,146 @@ const arrowLink = (label, href, cls = 'more') => `<a class="${cls}" href="${href
 function home() {
   const heroIds = hawthorne.images.filter(hasImage).slice(0, 4);
   const hasHero = heroIds.length > 0;
+  // "Pool at 10 Hawthorne Avenue..." -> "Pool"
+  const room = id => (U.REG_BY_ID[id].alt.split(' at 10 Hawthorne')[0] || '').trim();
+  const pad = n => String(n).padStart(2, '0');
   const heroMedia = hasHero
-    ? `<div class="hero__slides" data-slides>${heroIds.map((id, i) => `<div class="hero__slide${i === 0 ? ' is-active' : ''}">${pic(id, { eager: i === 0, sizes: '100vw', alt: i === 0 ? U.REG_BY_ID[id].alt : '' })}</div>`).join('')}</div>`
-    : `<div class="hero__portrait">${pic('alex-phone', { eager: true, sizes: '(min-width: 900px) 40vw, 100vw' })}</div>`;
+    ? `<div class="hero__media"><div class="hero__aperture" data-slides>${heroIds.map((id, i) => `<div class="hero__slide${i === 0 ? ' is-active' : ''}" data-caption="${esc(room(id))}">${pic(id, { eager: i === 0, sizes: '100vw', alt: i === 0 ? U.REG_BY_ID[id].alt : '' })}</div>`).join('')}</div></div>`
+    : `<div class="hero__media hero__media--portrait">${pic('alex-phone', { eager: true, sizes: '(min-width: 900px) 40vw, 100vw' })}</div>`;
+  let wi = 0;
+  const words = text => text.split(' ').map(w => `<span class="w"><span style="--i:${wi++}">${w}</span></span>`).join(' ');
 
-  const signatureImg = hawthorne.images.find(hasImage) || hawthorne.images[0];
+  const walkIds = ['hawthorne-03', 'hawthorne-02', 'hawthorne-04', 'hawthorne-06', 'hawthorne-05', 'hawthorne-07', 'hawthorne-10'].filter(hasImage);
   const sharlandImg = sharland && (sharland.images.find(hasImage) || sharland.images[0]);
   const floor = salesData.homepagePriceFloor;
   const gallerySales = ['2-34-tobruk-avenue-cremorne', 'g09-28-mindarie-street-lane-cove', '205-15-finlayson-street-lane-cove', '2-6-parklands-avenue-lane-cove', '204-76-82-gordon-crescent-lane-cove']
     .map(id => saleById[id]).filter(Boolean);
   const strip = ['chatswood-west', 'longueville', 'northbridge', 'castlecrag', 'mosman', 'cremorne', 'greenwich', 'lane-cove'].map(s => suburbBySlug[s]).filter(Boolean);
+  // Hover preview for each suburb: a public sale or listing photographed there. Private homes are never used.
+  const suburbImage = slug => {
+    const hit = [...sales, ...publicListings].find(x => x.suburbSlug === slug && firstImage(x.images));
+    return hit ? imgUrl(firstImage(hit.images), 480) : '';
+  };
+
+  // Odometer figures: digits roll into place, the real text stays readable to assistive tech.
+  const odo = fig => `<span class="sr">${esc(fig)}</span><span class="odo" aria-hidden="true">${[...fig].map((ch, i) =>
+    /\d/.test(ch) ? `<span class="odo__d" style="--d:${ch};--i:${i}"><span>${[...'0123456789'].map(d => `<i>${d}</i>`).join('')}</span></span>` : `<span class="odo__c">${esc(ch)}</span>`).join('')}</span>`;
+
+  const garden = hasImage('hawthorne-10') ? 'hawthorne-10' : heroIds[0];
 
   const body = `
 <section class="hero${hasHero ? ' hero--full' : ' hero--split'}" aria-labelledby="hero-h">
   ${heroMedia}
   <div class="hero__veil" aria-hidden="true"></div>
   <div class="wrap hero__content">
-    <p class="label label--light">Raine &amp; Horne Lower North Shore · Partner Agent</p>
-    <h1 id="hero-h" class="hero__title">The Lower North Shore's most recommended agent.</h1>
+    <h1 id="hero-h" class="hero__title">${words("The Lower North Shore's most")} <em>${words('recommended')}</em> ${words('agent.')}</h1>
     <p class="hero__sub">Seventeen years. Street and suburb records. Now representing the area's finest homes.</p>
     <div class="hero__ctas">
       <a class="btn btn--light" href="/appraisal/">Request a private appraisal</a>
       <a class="btn btn--line-light" href="#signature">View signature sales</a>
     </div>
-    ${hasHero ? `<p class="hero__caption">10 Hawthorne Avenue, Chatswood. Sold $4,025,000.</p>` : ''}
+  </div>
+  ${hasHero ? `<div class="hero__meta wrap" aria-hidden="true">
+    <p class="hero__where">10 Hawthorne Avenue, Chatswood. Sold $4,025,000.</p>
+    <p class="hero__count"><span class="hero__room" data-room>${esc(room(heroIds[0]))}</span><span data-index>01</span> / ${pad(heroIds.length)}</p>
+    <span class="hero__bar"><i data-bar></i></span>
+  </div>` : ''}
+</section>
+
+<section class="statement" aria-labelledby="st-h">
+  <div class="wrap">
+    <h2 id="st-h" class="sr">Track record</h2>
+    <p class="statement__lead" data-split>Partner Agent and Director at Raine &amp; Horne Lower North Shore. Lane Cove's deepest buyer database, now working for the area's most significant homes.</p>
+    <dl class="statement__figs">
+      ${stats.proofBand.map((p, i) => `<div class="statement__fig" data-reveal style="--i:${i}">
+        <dt>${esc(p.label)}</dt>
+        <dd>${odo(p.figure)}</dd>
+      </div>`).join('')}
+    </dl>
+    <ol class="statement__src">${stats.proofBand.map(p => `<li>${esc(p.label)}: ${esc(p.source)}.</li>`).join('')}</ol>
   </div>
 </section>
 
-${C.proofBand(stats)}
-
-<section class="section signature" id="signature" aria-labelledby="sig-h">
-  <div class="wrap signature__grid">
-    <div class="signature__media" data-reveal>
-      ${pic(signatureImg, { sizes: '(min-width: 900px) 58vw, 100vw', ratio: '4/5', alt: 'Pool and garden at 10 Hawthorne Avenue, Chatswood, sold by Alex Banning' })}
+<section class="walk" id="signature" aria-labelledby="sig-h" style="--panels:${walkIds.length + 1}">
+  <div class="walk__stage">
+    <div class="walk__track">
+      <div class="walk__intro">
+        <p class="label">Signature sale · Chatswood West</p>
+        <h2 id="sig-h" class="display">10 Hawthorne Avenue</h2>
+        <p class="figure">$4,025,000</p>
+        <p class="walk__lede">Held by one family for four decades. A corner estate with a saltwater pool and helical staircase, taken to auction and sold on 14 February 2026.</p>
+        ${arrowLink('Read the case study', '/results/10-hawthorne-avenue-chatswood/')}
+      </div>
+      ${walkIds.map((id, i) => `<figure class="walk__panel walk__panel--${i % 3}">
+        <div class="walk__frame">${pic(id, { sizes: '(min-width: 900px) 52vw, 86vw', alt: U.REG_BY_ID[id].alt })}</div>
+        <figcaption><span>${pad(i + 1)}</span>${esc(room(id))}</figcaption>
+      </figure>`).join('')}
     </div>
-    <div class="signature__copy" data-reveal>
-      <p class="label">Signature sale · Chatswood West</p>
-      <h2 id="sig-h" class="display">10 Hawthorne Avenue</h2>
-      <p class="figure">$4,025,000</p>
-      <p class="lede">Held by one family for four decades. A corner estate with a saltwater pool and helical staircase, taken to auction and sold.</p>
-      <dl class="kv">
-        <div><dt>Method</dt><dd>Auction</dd></div>
-        <div><dt>Date</dt><dd>14 February 2026</dd></div>
-        <div><dt>Home</dt><dd>Four bedrooms, double brick, studio</dd></div>
-      </dl>
-      ${arrowLink('Read the case study', '/results/10-hawthorne-avenue-chatswood/')}
-    </div>
+    <span class="walk__progress" aria-hidden="true"><i></i></span>
   </div>
 </section>
 
 ${sharland ? `<section class="section private" aria-labelledby="pc-h">
   <div class="wrap private__grid">
-    <div class="private__copy" data-reveal>
-      <p class="label label--light">Private Collection</p>
-      <h2 id="pc-h" class="display">42 Sharland Avenue, Chatswood</h2>
-      <p class="lede">Four bedrooms, three bathrooms and a pool. Available off market to registered buyers.</p>
-      <p>Some homes are better sold quietly. The Private Collection is offered first to buyers on Alex's register, before and sometimes instead of the portals.</p>
-      ${arrowLink('Enter the Private Collection', '/private-collection/', 'more more--light')}
-    </div>
     <div class="private__media" data-reveal>
-      <div class="veiled">${pic(sharlandImg, { sizes: '(min-width: 900px) 45vw, 100vw', ratio: '4/5', alt: 'A glimpse of the pool at 42 Sharland Avenue, Chatswood, offered off market' })}</div>
+      <div class="glimpse" data-glimpse>
+        ${pic(sharlandImg, { sizes: '(min-width: 1000px) 50vw, 100vw', ratio: '4/5', alt: 'A glimpse of the pool at 42 Sharland Avenue, Chatswood, offered off market' })}
+        <div class="glimpse__clear" aria-hidden="true">${pic(sharlandImg, { sizes: '(min-width: 1000px) 50vw, 100vw', ratio: '4/5', alt: '' })}</div>
+      </div>
     </div>
-    <div class="private__form" data-reveal>
-      <h3 class="h3">Join the private buyer register</h3>
-      <p class="muted">Hear about Private Collection homes before they are advertised, if they are advertised at all.</p>
-      ${C.registerForm()}
+    <div class="private__copy">
+      <p class="label">Private Collection</p>
+      <h2 id="pc-h" class="display">Some homes are better sold <em>quietly.</em></h2>
+      <p class="lede">42 Sharland Avenue, Chatswood. Four bedrooms, three bathrooms and a pool, offered off market to registered buyers.</p>
+      ${arrowLink('Enter the Private Collection', '/private-collection/')}
+      <div class="private__form">
+        <h3 class="h3">Join the private buyer register</h3>
+        <p class="muted">Hear about Private Collection homes before they are advertised, if they are advertised at all.</p>
+        ${C.registerForm()}
+      </div>
     </div>
   </div>
 </section>` : ''}
 
 <section class="section approach" aria-labelledby="ap-h">
-  <div class="wrap">
-    ${C.sectionHead({ label: 'The approach', id: 'ap-h', title: 'Preparation, judgement, and a steadfast commitment to the result.', intro: 'Real estate at the top of the market is rarely about the loudest voice in the room.' })}
-    <div class="approach__grid">
-      <article data-reveal><p class="num">I</p><h3 class="h3">Preparation</h3><p>Pre-market strategy set before a photograph is taken. Styling, trades and presentation managed to a timeline, so the home launches once and launches well.</p></article>
-      <article data-reveal><p class="num">II</p><h3 class="h3">Judgement</h3><p>Honest pricing advice, and a clear recommendation on method: auction, private treaty or a private, off-market campaign. The right answer depends on the home, not habit.</p></article>
-      <article data-reveal><p class="num">III</p><h3 class="h3">Reach</h3><p>Lane Cove's deepest buyer database, built across ${stats.rea.sold} sales a year. ${stats.domain.sold} sales and ${stats.domain.totalValue} in twelve months means active, qualified buyers already in conversation. That is what a prestige home needs.</p>${statNote(`${stats.rea.source} and ${stats.domain.source}, ${stats.rea.period}`)}</article>
-    </div>
+  <div class="wrap approach__grid">
+    <h2 id="ap-h" class="display approach__h">Preparation, judgement, and a steadfast commitment to the result.</h2>
+    <ol class="approach__list">
+      <li><h3>Preparation</h3><p>Pre-market strategy set before a photograph is taken. Styling, trades and presentation managed to a timeline, so the home launches once and launches well.</p></li>
+      <li><h3>Judgement</h3><p>Honest pricing advice, and a clear recommendation on method: auction, private treaty or a private, off-market campaign. The right answer depends on the home, not habit.</p></li>
+      <li><h3>Reach</h3><p>${stats.domain.sold} sales and ${stats.domain.totalValue} in twelve months means active, qualified buyers already in conversation. That is what a prestige home needs.</p>${statNote(`${stats.rea.source} and ${stats.domain.source}, ${stats.rea.period}`)}</li>
+    </ol>
   </div>
 </section>
 
 <section class="section results-band" aria-labelledby="rs-h">
   <div class="wrap">
-    ${C.sectionHead({ label: 'Results', id: 'rs-h', title: 'Recent results.', link: ['View all results', '/results/'] })}
+    <header class="results-band__head">
+      <h2 id="rs-h" class="display">Recent results.</h2>
+      ${arrowLink('View all results', '/results/')}
+    </header>
+    <ul class="mosaic" role="list" data-cursor="View">
+      ${gallerySales.map((s, i) => `<li class="mosaic__item mosaic__item--${i}" data-reveal>${C.saleCard(s, { showPrice: s.price >= floor, ratio: i === 0 ? '4/5' : i === 1 ? '1/1' : '4/3', sizes: i === 0 ? '(min-width: 900px) 46vw, 100vw' : '(min-width: 900px) 28vw, 100vw' })}</li>`).join('')}
+    </ul>
   </div>
-  ${C.carousel(gallerySales.map(s => C.saleCard(s, { showPrice: s.price >= floor })), 'Recent results')}
 </section>
 
 <section class="section reviews-band" aria-labelledby="rv-h">
   <div class="wrap reviews-band__inner">
-    <h2 id="rv-h" class="label">In their words</h2>
+    <h2 id="rv-h" class="sr">In their words</h2>
     ${C.quoteRotator(reviews.quotes, stats)}
     ${arrowLink('Read more reviews', '/reviews/')}
   </div>
 </section>
 
-<section class="section suburbs-strip" aria-labelledby="sb-h">
+<section class="section suburbs-index" aria-labelledby="sb-h">
   <div class="wrap">
-    ${C.sectionHead({ label: 'Suburbs', id: 'sb-h', title: 'Across the Lower North Shore.', link: ['All suburb guides', '/suburbs/'] })}
-    <ul class="strip" role="list">
-      ${strip.map((s, i) => `<li data-reveal><a href="/suburbs/${s.slug}/"><span class="strip__n">${String(i + 1).padStart(2, '0')}</span><span class="strip__name">${esc(s.name)}</span><span class="strip__stock">${esc(s.stock)}</span></a></li>`).join('')}
+    <header class="results-band__head">
+      <h2 id="sb-h" class="display">Across the Lower North Shore.</h2>
+      ${arrowLink('All suburb guides', '/suburbs/')}
+    </header>
+    <ul class="index" role="list" data-preview>
+      ${strip.map(s => `<li><a href="/suburbs/${s.slug}/"${suburbImage(s.slug) ? ` data-img="${suburbImage(s.slug)}"` : ''}><span class="index__name">${esc(s.name)}</span><span class="index__stock">${esc(s.stock)}</span>${ICON.arrow}</a></li>`).join('')}
     </ul>
   </div>
 </section>
@@ -172,13 +212,14 @@ ${C.awardsMarquee(awards)}
 
 ${C.aboutFacts(stats, awards)}
 
-${C.closingCta()}
+${C.closingCta({ image: garden })}
 `;
   write('/', page({
     path: '/',
     title: 'Alex Banning | Prestige & Lower North Shore Real Estate Agent',
     description: `Record-setting Raine & Horne Partner Agent. $60M+ sold in 12 months, ${stats.reviews.ratemyagent.count} verified reviews. Request a private appraisal.`,
     overlay: true,
+    bodyClass: 'is-home',
     preload: hasHero ? preloadFor(heroIds[0], '100vw') : preloadFor('alex-phone', '(min-width: 900px) 40vw, 100vw'),
     jsonld: [agentSchema(true), { '@context': 'https://schema.org', '@type': 'WebSite', name: 'Alex Banning', url: abs('/') }],
     body,
@@ -314,7 +355,7 @@ ${C.closingCta()}`;
     const body = `
 ${breadcrumbs([['Home', '/'], ['Results', '/results/'], [s.address, url]])}
 <section class="cs-hero">
-  <div class="cs-hero__media">${pic(lead, { eager: true, sizes: '100vw', ratio: '16/9', alt: `${s.address}, ${s.locality}, sold by Alex Banning` })}</div>
+  <div class="cs-hero__media" style="view-transition-name:sale-${s.id}">${pic(lead, { eager: true, sizes: '100vw', ratio: '16/9', alt: `${s.address}, ${s.locality}, sold by Alex Banning` })}</div>
   <div class="wrap cs-hero__copy">
     <p class="label">Case study · ${esc(s.suburb)}</p>
     <h1 class="display display--xl">${esc(s.address)}, ${esc(s.locality)}</h1>
@@ -385,10 +426,10 @@ function about() {
   </div>
 </section>
 
-<section class="section section--ink" aria-labelledby="why-h">
+<section class="section section--alt" aria-labelledby="why-h">
   <div class="wrap">
     ${C.sectionHead({ label: 'Significant homes', id: 'why-h', title: 'Why vendors of significant homes choose Alex.' })}
-    <div class="approach__grid approach__grid--light">
+    <div class="pillars">
       <article data-reveal><p class="num">I</p><h3 class="h3">Discretion</h3><p>Private and off-market campaigns for owners who value privacy, run with the same discipline as a public one.</p></article>
       <article data-reveal><p class="num">II</p><h3 class="h3">Buyer depth</h3><p>${stats.domain.sold} sales and ${stats.domain.totalValue} in twelve months. The right buyer is often already in conversation.</p>${C.src(`${stats.domain.source}, ${stats.domain.period}`)}</article>
       <article data-reveal><p class="num">III</p><h3 class="h3">Auction record</h3><p>${stats.domain.auction} of ${stats.domain.sold} recent sales under the hammer. Competition, managed well, sets the price.</p>${C.src(`${stats.domain.source}, ${stats.domain.period}`)}</article>

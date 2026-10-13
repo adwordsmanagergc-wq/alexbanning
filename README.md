@@ -49,6 +49,15 @@ Commit the outputs. Any image not yet processed renders as a quiet "Photography 
 
 The homepage hero automatically becomes a slow Hawthorne slideshow once `hawthorne-*` images are processed; until then it shows Alex's portrait. Reorder `hawthorne-*` entries (pool, garden, staircase, facade first) to choose the hero sequence.
 
+## Design system
+
+All tokens live at the top of `static/assets/css/site.css`: bone paper, eucalypt ink and one accent (angophora `#9E4426`), Bodoni Moda for display (optical size matched to rendered size so hairlines survive) and Geist for text, square corners throughout. Fonts are self-hosted in `static/assets/fonts/`.
+
+Motion is progressive enhancement and every effect has a reduced-motion path:
+- Hero: the photograph opens out of a slit on arrival, rooms wipe in every 7s with a caption and progress bar, and the frame recedes as you scroll.
+- Signature sale: a pinned section where scrolling walks horizontally through 10 Hawthorne Avenue (CSS scroll-driven animation; browsers without it, and reduced motion, get a swipeable row).
+- Figures roll into place, display headings rise word by word, principles brighten as they are read, the Private Collection photo is frosted and the pointer clears a glimpse, suburb names preview a real sale photo from that suburb, and pages cross-fade with the result photo carried into its case study.
+
 ## Configuration (environment variables)
 
 Set in Vercel, Project Settings, Environment Variables. All optional; features switch on when present.

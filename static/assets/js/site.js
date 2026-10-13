@@ -10,14 +10,24 @@
     set: function (k, v) { try { localStorage.setItem(k, v); } catch (e) { /* private mode */ } }
   };
 
-  /* Header: solid on scroll, mobile menu */
+  var fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  var root = document.documentElement;
+
+  /* Header: solid once the page leaves the top (observer on a sentinel, no scroll listener) */
   var hdr = $('#hdr');
   if (hdr) {
-    var onScroll = function () { hdr.classList.toggle('is-solid', window.scrollY > 40); };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
+    if ('IntersectionObserver' in window) {
+      var sentinel = document.createElement('div');
+      sentinel.setAttribute('aria-hidden', 'true');
+      sentinel.style.cssText = 'position:absolute;top:0;left:0;width:1px;height:48px;pointer-events:none';
+      document.body.prepend(sentinel);
+      new IntersectionObserver(function (en) { hdr.classList.toggle('is-solid', !en[0].isIntersecting); }).observe(sentinel);
+    } else {
+      hdr.classList.add('is-solid');
+    }
     var toggle = $('.hdr__toggle'), menu = $('#menu');
     if (toggle && menu) {
+      $$('nav > *', menu).forEach(function (el, k) { el.style.setProperty('--i', k); });
       var setOpen = function (open) {
         toggle.setAttribute('aria-expanded', String(open));
         menu.hidden = !open;
@@ -29,58 +39,140 @@
     }
   }
 
+  /* Page ready: the hero aperture opens once the first photograph can paint */
+  var ready = function () { root.classList.add('is-ready'); };
+  var heroImg = $('.hero--full .hero__slide img');
+  if (heroImg && !reduced) {
+    var done = false, go = function () { if (!done) { done = true; requestAnimationFrame(function () { requestAnimationFrame(ready); }); } };
+    if (heroImg.complete && heroImg.naturalWidth) go();
+    else { heroImg.addEventListener('load', go, { once: true }); heroImg.addEventListener('error', go, { once: true }); }
+    setTimeout(go, 1400);
+  } else {
+    ready();
+  }
+
+  /* Split display headings into words so they can rise line by line */
+  function split(el) {
+    var k = 0;
+    (function walk(node) {
+      Array.prototype.slice.call(node.childNodes).forEach(function (n) {
+        if (n.nodeType === 3) {
+          var parts = n.textContent.split(/(\s+)/), frag = document.createDocumentFragment();
+          parts.forEach(function (part) {
+            if (!part) return;
+            if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(' ')); return; }
+            var w = document.createElement('span'), inner = document.createElement('span');
+            w.className = 'w'; inner.style.setProperty('--i', k++); inner.textContent = part;
+            w.appendChild(inner); frag.appendChild(w);
+          });
+          n.parentNode.replaceChild(frag, n);
+        } else if (n.nodeType === 1 && !n.classList.contains('w')) {
+          walk(n);
+        }
+      });
+    })(el);
+    el.classList.add('is-split');
+  }
+  if (!reduced) {
+    $$('main .display, main [data-split]').forEach(function (el) {
+      if (el.closest('.hero') || el.querySelector('a, br')) return;
+      el.setAttribute('data-split', '');
+      split(el);
+    });
+  }
+
   /* Reveal on scroll */
-  var reveal = $$('[data-reveal]');
+  var reveal = $$('[data-reveal], [data-split]');
   if ('IntersectionObserver' in window && !reduced) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('is-in'); io.unobserve(en.target); } });
-    }, { rootMargin: '0px 0px -8% 0px' });
+    }, { rootMargin: '0px 0px -10% 0px' });
     reveal.forEach(function (el) { io.observe(el); });
   } else {
     reveal.forEach(function (el) { el.classList.add('is-in'); });
   }
 
-  /* Hero slideshow */
-  var slides = $$('[data-slides] .hero__slide');
+  /* Hero slideshow: each room wipes in, the caption and progress bar follow */
+  var slideRoot = $('[data-slides]');
+  var slides = $$('.hero__slide', slideRoot || document);
   if (slides.length > 1 && !reduced) {
-    var si = 0;
-    setInterval(function () {
-      if (document.hidden) return;
-      slides[si].classList.remove('is-active');
+    var SLIDE = 7000, si = 0, timer = null, visible = true;
+    var bar = $('[data-bar]'), roomEl = $('[data-room]'), idxEl = $('[data-index]');
+    root.style.setProperty('--slide', SLIDE / 1000 + 's');
+    var runBar = function () { if (!bar) return; bar.classList.remove('is-running'); void bar.offsetWidth; bar.classList.add('is-running'); };
+    var advance = function () {
+      if (document.hidden || !visible) return;
+      var prev = slides[si];
       si = (si + 1) % slides.length;
-      slides[si].classList.add('is-active');
-    }, 7000);
+      var next = slides[si];
+      slides.forEach(function (s) { s.classList.remove('is-prev', 'is-entering'); });
+      prev.classList.remove('is-active'); prev.classList.add('is-prev');
+      next.classList.add('is-entering');
+      void next.offsetWidth;
+      next.classList.add('is-active');
+      if (roomEl) roomEl.textContent = next.getAttribute('data-caption');
+      if (idxEl) idxEl.textContent = String(si + 1).padStart(2, '0');
+      runBar();
+    };
+    window.addEventListener('load', function () { $$('img', slideRoot).forEach(function (img) { img.loading = 'eager'; }); });
+    var start = function () { if (!timer) { runBar(); timer = setInterval(advance, SLIDE); } };
+    var stop = function () { clearInterval(timer); timer = null; if (bar) bar.classList.remove('is-running'); };
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (en) { visible = en[0].isIntersecting; visible ? start() : stop(); }).observe(slideRoot);
+    } else { start(); }
   }
 
-  /* Drag carousel */
-  $$('[data-carousel]').forEach(function (c) {
-    var track = $('.carousel__track', c);
-    var step = function () { var li = track.querySelector('li'); return li ? li.getBoundingClientRect().width + 32 : 320; };
-    var go = function (dir) { track.scrollBy({ left: dir * step(), behavior: reduced ? 'auto' : 'smooth' }); };
-    $('[data-prev]', c).addEventListener('click', function () { go(-1); });
-    $('[data-next]', c).addEventListener('click', function () { go(1); });
-    track.addEventListener('keydown', function (e) {
-      if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
-      if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+  /* Pointer followers: one rAF loop, eased toward the pointer */
+  function follower(el) {
+    var x = innerWidth / 2, y = innerHeight / 2, tx = x, ty = y, raf = null;
+    var tick = function () {
+      x += (tx - x) * 0.18; y += (ty - y) * 0.18;
+      el.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)';
+      raf = Math.abs(tx - x) + Math.abs(ty - y) > 0.3 ? requestAnimationFrame(tick) : null;
+    };
+    return {
+      move: function (e, snap) { tx = e.clientX; ty = e.clientY; if (snap) { x = tx; y = ty; } if (!raf) raf = requestAnimationFrame(tick); }
+    };
+  }
+  if (fine && !reduced) {
+    /* "View" label over result photographs */
+    $$('[data-cursor]').forEach(function (zone) {
+      var c = document.createElement('div');
+      c.className = 'cursor'; c.setAttribute('aria-hidden', 'true'); c.textContent = zone.getAttribute('data-cursor');
+      document.body.appendChild(c);
+      var f = follower(c), on = false;
+      zone.addEventListener('pointermove', function (e) {
+        var over = e.target.closest('.card__media');
+        if (over && !on) { f.move(e, true); }
+        on = Boolean(over); c.classList.toggle('is-on', on); f.move(e);
+      });
+      zone.addEventListener('pointerleave', function () { on = false; c.classList.remove('is-on'); });
     });
-    var down = false, startX = 0, startLeft = 0, moved = false;
-    track.addEventListener('pointerdown', function (e) {
-      if (e.pointerType !== 'mouse') return;
-      down = true; moved = false; startX = e.clientX; startLeft = track.scrollLeft;
+
+    /* Suburb index: a photograph from that suburb follows the pointer */
+    $$('[data-preview]').forEach(function (list) {
+      var p = document.createElement('div'), img = document.createElement('img');
+      p.className = 'preview'; p.setAttribute('aria-hidden', 'true'); img.alt = ''; img.decoding = 'async';
+      p.appendChild(img); document.body.appendChild(p);
+      var f = follower(p);
+      $$('a[data-img]', list).forEach(function (a) {
+        a.addEventListener('pointerenter', function (e) { img.src = a.getAttribute('data-img'); f.move(e, !p.classList.contains('is-on')); p.classList.add('is-on'); });
+        a.addEventListener('pointermove', function (e) { f.move(e); });
+        a.addEventListener('pointerleave', function () { p.classList.remove('is-on'); });
+      });
     });
-    window.addEventListener('pointermove', function (e) {
-      if (!down) return;
-      var dx = e.clientX - startX;
-      if (Math.abs(dx) > 4) { moved = true; track.classList.add('is-dragging'); }
-      track.scrollLeft = startLeft - dx;
+
+    /* Private Collection glimpse: the pointer clears a circle of the frosted photograph */
+    $$('[data-glimpse]').forEach(function (g) {
+      g.addEventListener('pointerenter', function () { g.classList.add('is-looking'); });
+      g.addEventListener('pointerleave', function () { g.classList.remove('is-looking'); });
+      g.addEventListener('pointermove', function (e) {
+        var r = g.getBoundingClientRect();
+        g.style.setProperty('--x', (e.clientX - r.left) + 'px');
+        g.style.setProperty('--y', (e.clientY - r.top) + 'px');
+      });
     });
-    window.addEventListener('pointerup', function () {
-      if (!down) return;
-      down = false;
-      setTimeout(function () { track.classList.remove('is-dragging'); }, 0);
-    });
-    track.addEventListener('click', function (e) { if (moved) { e.preventDefault(); moved = false; } }, true);
-  });
+  }
 
   /* Review rotator */
   $$('[data-rotator]').forEach(function (r) {
@@ -111,7 +203,8 @@
       cards.forEach(function (li) {
         var ok = (!type || li.dataset.type === type) && (!sub || li.dataset.suburb === sub) && (!yr || li.dataset.year === yr);
         li.classList.toggle('is-hidden', !ok);
-        if (ok) shown++;
+        li.classList.remove('is-shown');
+        if (ok) { li.style.setProperty('--k', Math.min(shown, 12)); void li.offsetWidth; li.classList.add('is-shown'); shown++; }
       });
       countEl.textContent = shown;
     };

@@ -6,6 +6,16 @@
   "cleanUrls": true,
   "redirects": [
     {
+      "source": "/lowernorthshore/appraisal",
+      "destination": "/appraisal/?suburb=lower-north-shore",
+      "permanent": true
+    },
+    {
+      "source": "/:slug(lane-cove|lane-cove-north|lane-cove-west|chatswood|chatswood-west|riverview|longueville|greenwich|artarmon|northbridge|castlecrag|mosman|cremorne|neutral-bay)/appraisal",
+      "destination": "/appraisal/?suburb=:slug",
+      "permanent": true
+    },
+    {
       "source": "/lower-north-shore",
       "destination": "/suburbs/",
       "permanent": true

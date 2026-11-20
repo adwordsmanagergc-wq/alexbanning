@@ -212,17 +212,37 @@
     filters.addEventListener('submit', function (e) { e.preventDefault(); });
   }
 
-  /* Lead tracking */
-  function trackLead(kind) {
+  /* Lead tracking. done() runs once the hits are sent (or after 1.5s), so a redirect never cuts them off. */
+  function trackLead(kind, done) {
+    var called = false;
+    var finish = function () { if (!called) { called = true; if (done) done(); } };
     try {
       if (window.gtag) {
         window.gtag('event', 'generate_lead', { form_name: kind });
-        if (CFG.adsSendTo) window.gtag('event', 'conversion', { send_to: CFG.adsSendTo });
-      }
+        // Google Ads counts seller leads only; buyer forms still go to GA4/Meta/Vercel as generate_lead.
+        var sellerLead = kind !== 'buyer-register' && kind !== 'private-view';
+        if (CFG.adsSendTo && sellerLead) window.gtag('event', 'conversion', { send_to: CFG.adsSendTo, event_callback: finish });
+        else finish();
+      } else finish();
       if (window.fbq) window.fbq('track', 'Lead', { content_name: kind });
       if (window.va) window.va('event', { name: 'Lead', data: { form: kind, page: location.pathname } });
-    } catch (e) { /* never block a lead on analytics */ }
+    } catch (e) { finish(); /* never block a lead on analytics */ }
+    setTimeout(finish, 1500);
   }
+
+  /* Phone click tracking (any tel: link, including ones added later) */
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[href^="tel:"]') : null;
+    if (!a) return;
+    try {
+      if (window.gtag) {
+        window.gtag('event', 'click_to_call', { link_url: a.getAttribute('href'), page_path: location.pathname });
+        if (CFG.adsCallSendTo) window.gtag('event', 'conversion', { send_to: CFG.adsCallSendTo });
+      }
+      if (window.fbq) window.fbq('track', 'Contact', { content_name: 'phone' });
+      if (window.va) window.va('event', { name: 'Phone click', data: { page: location.pathname } });
+    } catch (err) { /* ignore */ }
+  }, true);
 
   /* Validation helper */
   function validate(scope) {
@@ -280,10 +300,9 @@
       if (form._honey && form._honey.value) return;
       var btn = form.querySelector('button[type="submit"]');
       var onSuccess = function () {
-        trackLead(kind);
         var gate = form.closest('[data-gated]');
-        if (gate) { unlock(gate); store.set('ab-gate-' + gate.getAttribute('data-gated'), '1'); return; }
-        window.location.href = '/thank-you/?form=' + encodeURIComponent(kind);
+        if (gate) { trackLead(kind); unlock(gate); store.set('ab-gate-' + gate.getAttribute('data-gated'), '1'); return; }
+        trackLead(kind, function () { window.location.href = '/thank-you/?form=' + encodeURIComponent(kind); });
       };
       if (!CFG.endpoint) {
         status.classList.add('is-error');

@@ -50,8 +50,9 @@
     "vercelAnalytics": true,
     "ga4": "",
     "metaPixel": "",
-    "googleAds": "",
-    "googleAdsLeadLabel": ""
+    "googleAds": "AW-18030080512",
+    "googleAdsLeadLabel": "G8g8CJLv77sdEIDktJVD",
+    "googleAdsCallLabel": "_1S7CJXv77sdEIDktJVD"
   },
   "forms": {
     "endpoint": "https://formsubmit.co/381793293000a8c36ba4cf4f7a9aa3c1",

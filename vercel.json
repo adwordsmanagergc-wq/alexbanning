@@ -11,7 +11,17 @@
       "permanent": true
     },
     {
+      "source": "/lowernorthshore/appraisal/",
+      "destination": "/appraisal/?suburb=lower-north-shore",
+      "permanent": true
+    },
+    {
       "source": "/:slug(lane-cove|lane-cove-north|lane-cove-west|chatswood|chatswood-west|riverview|longueville|greenwich|artarmon|northbridge|castlecrag|mosman|cremorne|neutral-bay)/appraisal",
+      "destination": "/appraisal/?suburb=:slug",
+      "permanent": true
+    },
+    {
+      "source": "/:slug(lane-cove|lane-cove-north|lane-cove-west|chatswood|chatswood-west|riverview|longueville|greenwich|artarmon|northbridge|castlecrag|mosman|cremorne|neutral-bay)/appraisal/",
       "destination": "/appraisal/?suburb=:slug",
       "permanent": true
     },
@@ -21,7 +31,17 @@
       "permanent": true
     },
     {
+      "source": "/lower-north-shore/",
+      "destination": "/suburbs/",
+      "permanent": true
+    },
+    {
       "source": "/lower-north-shore/lane-cove",
+      "destination": "/suburbs/lane-cove/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/lane-cove/",
       "destination": "/suburbs/lane-cove/",
       "permanent": true
     },
@@ -31,7 +51,17 @@
       "permanent": true
     },
     {
+      "source": "/lower-north-shore/lane-cove-north/",
+      "destination": "/suburbs/lane-cove-north/",
+      "permanent": true
+    },
+    {
       "source": "/lower-north-shore/lane-cove-west",
+      "destination": "/suburbs/lane-cove-west/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/lane-cove-west/",
       "destination": "/suburbs/lane-cove-west/",
       "permanent": true
     },
@@ -41,7 +71,17 @@
       "permanent": true
     },
     {
+      "source": "/lower-north-shore/chatswood/",
+      "destination": "/suburbs/chatswood/",
+      "permanent": true
+    },
+    {
       "source": "/lower-north-shore/longueville",
+      "destination": "/suburbs/longueville/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/longueville/",
       "destination": "/suburbs/longueville/",
       "permanent": true
     },
@@ -51,7 +91,17 @@
       "permanent": true
     },
     {
+      "source": "/lower-north-shore/riverview/",
+      "destination": "/suburbs/riverview/",
+      "permanent": true
+    },
+    {
       "source": "/lower-north-shore/greenwich",
+      "destination": "/suburbs/greenwich/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/greenwich/",
       "destination": "/suburbs/greenwich/",
       "permanent": true
     },
@@ -61,7 +111,17 @@
       "permanent": true
     },
     {
+      "source": "/lower-north-shore/northbridge/",
+      "destination": "/suburbs/northbridge/",
+      "permanent": true
+    },
+    {
       "source": "/lower-north-shore/castlecrag",
+      "destination": "/suburbs/castlecrag/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/castlecrag/",
       "destination": "/suburbs/castlecrag/",
       "permanent": true
     },
@@ -71,7 +131,17 @@
       "permanent": true
     },
     {
+      "source": "/lower-north-shore/artarmon/",
+      "destination": "/suburbs/artarmon/",
+      "permanent": true
+    },
+    {
       "source": "/lower-north-shore/mosman",
+      "destination": "/suburbs/mosman/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/mosman/",
       "destination": "/suburbs/mosman/",
       "permanent": true
     },
@@ -81,7 +151,17 @@
       "permanent": true
     },
     {
+      "source": "/lower-north-shore/cremorne/",
+      "destination": "/suburbs/cremorne/",
+      "permanent": true
+    },
+    {
       "source": "/lower-north-shore/neutral-bay",
+      "destination": "/suburbs/neutral-bay/",
+      "permanent": true
+    },
+    {
+      "source": "/lower-north-shore/neutral-bay/",
       "destination": "/suburbs/neutral-bay/",
       "permanent": true
     },
@@ -91,12 +171,27 @@
       "permanent": true
     },
     {
+      "source": "/lower-north-shore/:slug/",
+      "destination": "/suburbs/",
+      "permanent": true
+    },
+    {
       "source": "/recent-sales",
       "destination": "/results/",
       "permanent": true
     },
     {
+      "source": "/recent-sales/",
+      "destination": "/results/",
+      "permanent": true
+    },
+    {
       "source": "/testimonials",
+      "destination": "/reviews/",
+      "permanent": true
+    },
+    {
+      "source": "/testimonials/",
       "destination": "/reviews/",
       "permanent": true
     },
